@@ -106,12 +106,39 @@ test('alles vol: geen open fase', () => {
   assert.ok(st.fases.every(f => f.staat === 'klaar'));
 });
 
-test('matrix: per competentie en niveau gevuld tegen vereist, over alle fases', () => {
+test('matrix: per competentie en niveau gevuld tegen vereist, alleen Propedeuse en Hoofdfase', () => {
   const st = status('s-noor');
-  const creeren = st.matrix.find(m => m.id === 'c-cre');
-  const n2 = creeren.cellen.find(c => c.niveau === '2');
-  assert.deepEqual(n2, { niveau: '2', vereist: 30, gevuld: 24, behaald: 54 });
-  assert.deepEqual(st.vrij.find(v => v.niveau === '2'), { niveau: '2', vereist: 69, gevuld: 54 });
+  const cel = (id, n) => st.matrix.find(m => m.id === id).cellen.find(c => c.niveau === n);
+  assert.deepEqual(cel('c-cre', '2'), { niveau: '2', vereist: 24, gevuld: 24, behaald: 54, keuze: 30, over: 0 });
+  assert.deepEqual(cel('c-ond', '3'), { niveau: '3', vereist: 3, gevuld: 3, behaald: 3, keuze: 0, over: 0 });
+  assert.equal(cel('c-cre', '3').vereist, 0);
+  assert.deepEqual(st.vrij.map(v => v.vereist), [0, 54, 3]);
+});
+
+test('matrix: behaald = verplicht + keuze + over, per vakje', () => {
+  const st = status('s-daan');
+  const cel = (id, n) => st.matrix.find(m => m.id === id).cellen.find(c => c.niveau === n);
+  assert.deepEqual(cel('c-cre', '1'), { niveau: '1', vereist: 24, gevuld: 24, behaald: 30, keuze: 0, over: 6 });
+  assert.deepEqual(cel('c-cre', '3'), { niveau: '3', vereist: 0, gevuld: 0, behaald: 6, keuze: 3, over: 3 });
+  for (const m of st.matrix) for (const c of m.cellen) assert.equal(c.behaald, c.gevuld + c.keuze + c.over, `${m.titel} N${c.niveau}`);
+});
+
+test('matrix: de keuze-rij weet welke competenties hem vullen; N1 heeft geen keuze-eis', () => {
+  const st = status('s-noor');
+  assert.deepEqual(st.vrij.find(v => v.niveau === '2').bijdragen, { 'c-cre': 30, 'c-org': 12, 'c-com': 12 });
+  assert.deepEqual(st.keuzeNiveaus, ['2', '3']);
+});
+
+test('matrix: stage- en afstudeer-EC staan er niet in', () => {
+  const st = status('s-mila');
+  const cel = (id, n) => st.matrix.find(m => m.id === id).cellen.find(c => c.niveau === n);
+  assert.equal(cel('c-cre', '2').behaald, 54, 'zonder de 21 EC Creëren N2 uit de stage');
+});
+
+test('matrix met cum laude: Keuze N3 18, Keuze N2 39, Onderzoeken N3 3', () => {
+  const st = metCL('s-jesse');
+  assert.deepEqual(st.vrij.map(v => v.vereist), [0, 39, 18]);
+  assert.equal(st.matrix.find(m => m.id === 'c-ond').cellen.find(c => c.niveau === '3').vereist, 3);
 });
 
 test('resultaat met amount null of 0 telt niet', () => {

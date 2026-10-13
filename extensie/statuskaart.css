@@ -38,8 +38,8 @@
 #st-kaart .st-totaal { margin: 0 0 8px; font-size: 14px; color: var(--st-zacht); }
 #st-kaart .st-totaal b { font-size: 28px; line-height: 1; color: var(--st-inkt); }
 #st-kaart .st-balk { display: flex; gap: 3px; height: 10px; }
-#st-kaart .st-segment { flex-basis: 0; background: var(--st-spoor); border-radius: 2px; overflow: hidden; }
-#st-kaart .st-segment i { display: block; height: 100%; background: var(--st-vol); }
+#st-kaart .st-segment { flex-basis: 0; background: var(--st-spoor); border-radius: 2px; }
+#st-kaart .st-segment i { display: block; height: 100%; max-width: 100%; background: var(--st-vol); border-radius: 2px; }
 #st-kaart .st-segment.open i { background: var(--st-huidig); }
 
 /* 2. Phases (klaar = done, open = can be worked on, dicht = conditions not met) and the shortfalls of each open phase */
@@ -64,7 +64,6 @@
 #st-kaart .st-tekorten li .st-getal { color: var(--st-tekort); }
 
 /* 3. Matrix competency × level */
-#st-kaart .st-matrix-rand { overflow-x: auto; }
 #st-kaart .st-matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
 #st-kaart .st-matrix th, #st-kaart .st-matrix td { padding: 4px 8px; border-bottom: 1px solid var(--st-lijn); text-align: left; }
 #st-kaart .st-matrix thead th { font-size: 11px; font-weight: 600; color: var(--st-zacht); }
@@ -73,9 +72,25 @@
 #st-kaart .st-matrix td.vol { color: var(--st-klaar); }
 #st-kaart .st-matrix td.tekort { color: var(--st-tekort); font-weight: 600; }
 #st-kaart .st-matrix td.leeg { color: var(--st-lijn); }
-#st-kaart .st-matrix td small { font-size: 11px; font-weight: 400; color: var(--st-zacht); }
+#st-kaart .st-matrix td.extra { color: var(--st-inkt); }
+#st-kaart .st-matrix td.st-onderstreept { text-decoration: underline dotted var(--st-zacht); text-underline-offset: 3px; outline: none; }
+#st-kaart .st-matrix td.st-tip:focus-visible { box-shadow: inset 0 0 0 2px var(--st-huidig); border-radius: 4px; }
 #st-kaart .st-matrix tr.st-vrij th { font-style: italic; color: var(--st-zacht); }
 #st-kaart .st-matrix tr:last-child > * { border-bottom: 0; }
+
+/* Tooltips (.st-tip with data-uitleg): show at once, unlike a title attribute that waits about a second.
+   Default: above the element, aligned right. Bar segments: aligned left; the header switch: below. */
+#st-kaart .st-tip { position: relative; }
+#st-kaart .st-tip::after {
+  content: attr(data-uitleg); position: absolute; right: 0; bottom: calc(100% + 4px); z-index: 5;
+  width: max-content; max-width: 260px; padding: 6px 8px; border-radius: 6px;
+  background: var(--st-inkt); color: #fff; font: 400 12px/1.35 system-ui, sans-serif; text-align: left; white-space: normal;
+  text-decoration: none; box-shadow: 0 4px 12px rgba(0, 0, 0, .15); opacity: 0; pointer-events: none; transition: opacity 60ms;
+}
+#st-kaart .st-tip:hover::after, #st-kaart .st-tip:focus-visible::after, #st-kaart .st-tip:focus-within::after { opacity: 1; }
+#st-kaart .st-segment.st-tip::after { right: auto; left: 0; }
+#st-kaart .st-segment.st-tip:last-child::after { left: auto; right: 0; }
+#st-kaart .st-kop .st-tip::after { bottom: auto; top: calc(100% + 4px); }
 
 @media (max-width: 640px) {
   #st-kaart .st-fases { grid-template-columns: repeat(2, 1fr); }

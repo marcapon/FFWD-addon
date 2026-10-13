@@ -6,7 +6,7 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 - **Statuskaart** op elke studentpagina (`/students/:id`), tussen de metadata en de afgeronde assessments:
   - het totaal van 240 EC, met een balk die is opgedeeld in de fases;
   - de vier fases (Propedeuse, Hoofdfase, Stage, Afstuderen) tegen de eisen uit ffwd `programs`, elk klaar, open of nog dicht, met de tekorten van elke open fase;
-  - een matrix van competentie × niveau: gevuld tegen vereist, over alle fases.
+  - een matrix van competentie × niveau voor de Propedeuse en de Hoofdfase. Op N1 staat gevuld/vereist. Op N2 en N3 staat behaald/verplicht, bijvoorbeeld 54/24; bij hoveren zie je de uitsplitsing in verplicht, keuze en wat nergens voor telt. Stage en Afstuderen worden in één keer beoordeeld en staan alleen bij de fases.
 - **EC-overzicht**: een menu-item in de zijbalk van ffwd. Het opent een tabel met de behaalde EC van al je studenten:
   - het totaal, met een balk die de voortgang naar 240 EC laat zien;
   - EC per competentie;

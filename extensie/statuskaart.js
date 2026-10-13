@@ -75,7 +75,7 @@
   function kop(kaart, id, cumLaude) {
     return el('div', { class: 'st-kop' },
       el('h2', { class: 'text-sm font-bold' }, 'Studievoortgang'),
-      cumLaude == null ? null : el('label', { class: 'st-schakelaar', title: 'Toon de eisen en voortgang voor cum laude' },
+      cumLaude == null ? null : el('label', { class: 'st-schakelaar st-tip', 'data-uitleg': 'Toon de eisen en voortgang voor cum laude' },
         el('input', { type: 'checkbox', role: 'switch', checked: cumLaude, onchange: async e => { await zetCumLaude(id, e.target.checked); vul(kaart, id); } }),
         el('span', {}, 'Cum laude')),
       el('button', { class: 'st-knop', onclick: () => { perStudent.delete(id); basis = null; vul(kaart, id); } }, 'Vernieuw'));
@@ -93,7 +93,7 @@
       el('p', { class: 'st-totaal' }, el('b', {}, String(st.totaal.gevuld)), ` van ${st.totaal.vereist} EC`),
       el('div', { class: 'st-balk', role: 'img', 'aria-label': `${st.totaal.gevuld} van ${st.totaal.vereist} EC` },
         st.fases.map(f => el('span', {
-          class: 'st-segment ' + f.staat, style: `flex-grow:${f.vereist}`, title: `${f.titel}: ${f.gevuld} van ${f.vereist} EC`,
+          class: 'st-segment st-tip ' + f.staat, style: `flex-grow:${f.vereist}`, 'data-uitleg': `${f.titel}: ${f.gevuld} van ${f.vereist} EC`,
         }, el('i', { style: `width:${f.vereist ? Math.min(100, f.gevuld / f.vereist * 100) : 0}%` })))),
       st.totaal.boven ? el('p', { class: 'st-sub' }, `Behaald: ${st.totaal.behaald} EC, waarvan ${st.totaal.boven} boven de eisen.`) : null);
 
@@ -118,18 +118,35 @@
           })
         : el('p', { class: 'st-sub' }, st.fases.every(f => f.klaar) ? 'Alle fases zijn vol.' : 'Er is nu geen fase open.'));
 
-    // 3. Matrix: competentie × niveau, gevuld tegen vereist over alle fases
+    // 3. Matrix: competentie × niveau, gevuld tegen vereist in Propedeuse en Hoofdfase
+    // Niveaus met een keuze-eis (N2, N3): behaald/verplicht, met de uitsplitsing bij hoveren.
+    // Niveaus zonder keuze-eis (N1): gevuld/vereist; wat erboven zit telt daar nergens voor.
+    const leeg = () => el('td', { class: 'st-getal leeg' }, '–');
+    // Tooltip via st-tip (zie statuskaart.css): direct zichtbaar, anders dan title
+    const uitlegCel = (klasse, tekst, uitleg) => el('td', {
+      class: 'st-getal st-tip st-onderstreept ' + klasse, 'data-uitleg': uitleg, tabindex: '0', 'aria-label': `${tekst}. ${uitleg}`,
+    }, tekst);
+    const metKeuze = n => st.keuzeNiveaus.includes(n);
     const celInhoud = c => {
-      const boven = c.behaald - c.gevuld;
-      if (!c.vereist && !c.behaald) return el('td', { class: 'st-getal leeg' }, '–');
-      return el('td', { class: 'st-getal ' + (c.gevuld >= c.vereist ? 'vol' : 'tekort'), title: `Behaald: ${c.behaald ?? c.gevuld} EC` },
-        c.vereist ? `${c.gevuld}/${c.vereist}` : '', boven > 0 ? el('small', {}, ` +${boven}`) : null);
+      if (!metKeuze(c.niveau)) return c.vereist
+        ? el('td', { class: 'st-getal ' + (c.gevuld >= c.vereist ? 'vol' : 'tekort') }, `${c.gevuld}/${c.vereist}`)
+        : leeg();
+      if (!c.vereist && !c.behaald) return leeg();
+      const delen = [c.gevuld && `${c.gevuld} verplicht`, c.keuze && `${c.keuze} keuze`, c.over && `${c.over} over (telt nergens voor)`].filter(Boolean);
+      const tekort = c.vereist - c.gevuld;
+      const uitleg = `${c.behaald} EC behaald` + (delen.length ? ': ' + delen.join(', ') : '') + (tekort > 0 ? `. Nog ${tekort} verplicht nodig.` : '');
+      return uitlegCel(!c.vereist ? 'extra' : tekort > 0 ? 'tekort' : 'vol', `${c.behaald}/${c.vereist}`, uitleg);
+    };
+    const keuzeInhoud = c => {
+      if (!c.vereist) return leeg();
+      const bronnen = Object.entries(c.bijdragen).map(([id, n]) => `${competentie[id]} ${n}`);
+      return uitlegCel(c.gevuld >= c.vereist ? 'vol' : 'tekort', `${c.gevuld}/${c.vereist}`, bronnen.length ? 'Komt uit: ' + bronnen.join(', ') : 'Nog geen keuze-EC');
     };
     const matrix = el('div', { class: 'st-blok st-matrix-rand' }, el('table', { class: 'st-matrix' },
       el('thead', {}, el('tr', {}, el('th', {}, ''), st.niveaus.map(n => el('th', { class: 'st-getal' }, NIVEAU(n))))),
       el('tbody', {},
         st.matrix.map(m => el('tr', {}, el('th', {}, m.titel), m.cellen.map(celInhoud))),
-        el('tr', { class: 'st-vrij' }, el('th', {}, 'Keuze'), st.vrij.map(c => celInhoud({ ...c, behaald: c.gevuld }))))));
+        el('tr', { class: 'st-vrij' }, el('th', {}, 'Keuze'), st.vrij.map(keuzeInhoud)))));
 
     // Cum laude (alleen als de schakelaar aan staat): 21 EC op N3 in de Hoofdfase
     const cl = st.cumLaude;
@@ -144,8 +161,9 @@
           cl.tekorten.length ? el('ul', {}, cl.tekorten.map(t => el('li', {}, naamEis(t), el('span', { class: 'st-getal' }, `nog ${t.tekort}`)))) : null,
           el('p', { class: 'st-sub' }, 'Stage en afstuderen tellen hiervoor niet mee. De Hoofdfase-eisen hierboven zijn de cum-laudevariant: 15 EC schuiven van Keuze N2 naar Keuze N3.'));
 
-    kaart.replaceChildren(kop(kaart, id, cumLaude), totaal, fases, cumLaudeBlok, matrix,
-      el('p', { class: 'st-voet' }, 'EC uit afgeronde assessments, gevuld/vereist. Stage- en afstudeerassessments tellen voor Stage en Afstuderen, de rest op niveau. Alleen het exacte niveau telt; +n = boven de eis van die cel (vult eerst de keuze-EC). Stage gaat open na de Propedeuse, Afstuderen na Hoofdfase en Stage.'));
+    // replaceChildren zet null om in de tekst "null"; daarom lege blokken eruit filteren
+    kaart.replaceChildren(...[kop(kaart, id, cumLaude), totaal, fases, cumLaudeBlok, matrix,
+      el('p', { class: 'st-voet' }, 'EC uit afgeronde assessments. De matrix toont Propedeuse en Hoofdfase: op N1 gevuld/vereist, op N2 en N3 behaald/verplicht (hover voor de uitsplitsing in verplicht en keuze). Stage- en afstudeerassessments tellen voor Stage en Afstuderen, de rest op niveau. Alleen het exacte niveau telt. Stage gaat open na de Propedeuse, Afstuderen na Hoofdfase en Stage.')].filter(Boolean));
   }
 
   // ---------- Starten ----------

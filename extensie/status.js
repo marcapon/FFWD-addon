@@ -16,6 +16,8 @@
 //   De student moet dan 21 EC op N3 halen in de Hoofdfase (Onderzoeken N3 3 + Keuze N3 18).
 //   Stage- en afstudeerassessments tellen daar niet voor (CUM_LAUDE). Minor en exchange tellen voorlopig
 //   wel mee: ffwd heeft er geen eigen soort voor (besloten 13-10-2026).
+// - De matrix (competentie × niveau) toont alleen fases zonder eigen soort assessment (Propedeuse,
+//   Hoofdfase). Stage en Afstuderen worden in één keer beoordeeld en staan alleen bij de fases.
 
 const FfwdStatus = (() => {
   // ffwd `programs` kent geen volgorde of voorwaarden; daarom hier, op titel van de fase
@@ -47,8 +49,9 @@ const FfwdStatus = (() => {
   }
 
   // Vult eisen uit potten (competentie|niveau → EC): eerst de eisen per competentie, dan de keuze-eisen.
-  // Past de potten aan; wat overblijft is niet toegewezen.
-  function verdeel(eisen, potten) {
+  // Past de potten aan; wat overblijft is niet toegewezen. naarKeuze (optioneel) houdt per pot bij
+  // hoeveel EC naar een keuze-eis ging.
+  function verdeel(eisen, potten, naarKeuze = new Map()) {
     for (const e of eisen.filter(e => e.competentie)) {
       const k = sleutel(e.competentie, e.niveau);
       e.gevuld = Math.min(e.vereist, potten.get(k) || 0);
@@ -60,6 +63,7 @@ const FfwdStatus = (() => {
         if (rest <= 0 || !k.endsWith('|' + e.niveau)) continue;
         const n = Math.min(rest, v);
         potten.set(k, v - n);
+        naarKeuze.set(k, (naarKeuze.get(k) || 0) + n);
         rest -= n;
       }
       e.gevuld = e.vereist - rest;
@@ -95,17 +99,17 @@ const FfwdStatus = (() => {
     const clFase = cumLaude ? fases.find(f => f.titel === CUM_LAUDE.fase) : null;
     const clMogelijk = clFase ? verschuifVoorCumLaude(clFase) : false;
 
-    const behaaldPerCel = new Map();
+    const behaaldPerCel = new Map(); // alleen EC in fases die in de matrix staan
     let behaald = 0, zonderFase = 0;
     for (const doel of goals || []) {
       const punten = ec(doel.result?.amount);
       if (!punten) continue;
       const k = sleutel(doel.competency?.id, String(doel.result.level));
       behaald += punten;
-      behaaldPerCel.set(k, (behaaldPerCel.get(k) || 0) + punten);
       const programma = faseVoor(programmas, doel);
       const fase = programma && fases.find(f => f.id === programma.id);
       if (!fase) { zonderFase += punten; continue; }
+      if (!fase.soort) behaaldPerCel.set(k, (behaaldPerCel.get(k) || 0) + punten);
       fase.behaald += punten;
       fase.potten.set(k, (fase.potten.get(k) || 0) + punten);
       if (teltVoorCumLaude(doel.session)) fase.pottenCL.set(k, (fase.pottenCL.get(k) || 0) + punten);
@@ -120,7 +124,9 @@ const FfwdStatus = (() => {
     }
 
     for (const f of fases) {
-      verdeel(f.eisen, f.potten);
+      f.naarKeuze = new Map();
+      verdeel(f.eisen, f.potten, f.naarKeuze);
+      f.over = f.potten; // wat na het verdelen in de potten bleef: telt nergens voor
       delete f.potten;
       delete f.pottenCL;
       f.vereist = som(f.eisen, e => e.vereist);
@@ -135,22 +141,35 @@ const FfwdStatus = (() => {
       f.staat = f.klaar ? 'klaar' : open ? 'open' : 'dicht';
       f.vroeg = !open && f.behaald > 0; // EC behaald terwijl de fase nog niet open was
     }
-    const eisenOp = (competentie, niveau) => fases.flatMap(f => f.eisen).filter(e => e.competentie === competentie && e.niveau === niveau);
+    const matrixFases = fases.filter(f => !f.soort);
+    const eisenOp = (competentie, niveau) => matrixFases.flatMap(f => f.eisen).filter(e => e.competentie === competentie && e.niveau === niveau);
+    const uitFases = (veld, k) => som(matrixFases, f => f[veld].get(k) || 0);
     const cel = (competentie, niveau) => {
       const eisen = eisenOp(competentie, niveau);
       return { niveau, vereist: som(eisen, e => e.vereist), gevuld: som(eisen, e => e.gevuld) };
     };
+    // Per competentie en niveau: behaald = verplicht (gevuld) + naar keuze + over
+    const competentieCel = (competentie, niveau) => {
+      const k = sleutel(competentie, niveau);
+      return { ...cel(competentie, niveau), behaald: behaaldPerCel.get(k) || 0, keuze: uitFases('naarKeuze', k), over: uitFases('over', k) };
+    };
+    // Per niveau: de keuze-eis en welke competenties hem vullen
+    const keuzeCel = niveau => ({
+      ...cel(null, niveau),
+      bijdragen: Object.fromEntries(competenties.map(c => [c.id, uitFases('naarKeuze', sleutel(c.id, niveau))]).filter(([, n]) => n)),
+    });
+    const matrix = competenties.map(c => ({ id: c.id, titel: c.title, cellen: niveaus.map(n => competentieCel(c.id, n)) }));
+    const vrij = niveaus.map(keuzeCel);
+    for (const f of fases) { delete f.naarKeuze; delete f.over; }
 
     return {
       totaal: { behaald, vereist: som(fases, f => f.vereist), gevuld: som(fases, f => f.gevuld), boven: behaald - som(fases, f => f.gevuld), zonderFase },
       fases,
       open: fases.filter(f => f.staat === 'open').map(f => f.id),
       niveaus,
-      matrix: competenties.map(c => ({
-        id: c.id, titel: c.title,
-        cellen: niveaus.map(n => ({ ...cel(c.id, n), behaald: behaaldPerCel.get(sleutel(c.id, n)) || 0 })),
-      })),
-      vrij: niveaus.map(n => cel(null, n)),
+      matrix,
+      vrij,
+      keuzeNiveaus: niveaus.filter(n => eisenOp(null, n).some(e => e.vereist > 0)), // niveaus met een keuze-eis
       cumLaude: cl,
     };
   }
