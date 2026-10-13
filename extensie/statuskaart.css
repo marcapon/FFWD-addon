@@ -1,0 +1,83 @@
+/* Statuskaart (statuskaart.js): study progress card on the student page.
+   The card itself uses ffwd's own Tailwind classes (white, rounded, grey border), so it matches the
+   assessment cards below it, also with the skin on. Inside: neutral colours, fonts inherited. */
+
+:root {
+  --st-inkt: #111827; --st-zacht: #6b7280; --st-lijn: #e5e7eb; --st-spoor: #f3f4f6;
+  --st-vol: #4b5563; --st-huidig: #0ea5e9; --st-tekort: #b45309; --st-klaar: #047857;
+  --st-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+#st-kaart { gap: 16px; color: var(--st-inkt); }
+#st-kaart h2 { margin: 0; }
+#st-kaart .st-kop { display: flex; align-items: center; }
+#st-kaart .st-knop {
+  margin-left: auto; padding: 2px 10px; border: 1px solid var(--st-lijn); border-radius: 6px;
+  background: transparent; color: var(--st-zacht); font-size: 12px; cursor: pointer;
+}
+#st-kaart .st-knop:hover { color: var(--st-inkt); border-color: var(--st-zacht); }
+#st-kaart .st-schakelaar { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--st-zacht); cursor: pointer; }
+#st-kaart .st-schakelaar + .st-knop { margin-left: 10px; }
+#st-kaart .st-schakelaar input { accent-color: var(--st-huidig); }
+
+/* Cum laude block (only when the switch is on) */
+#st-kaart .st-cumlaude { padding: 10px 12px; border: 1px dashed var(--st-huidig); border-radius: 6px; font-size: 13px; }
+#st-kaart .st-cumlaude.voldaan { border-style: solid; border-color: var(--st-klaar); }
+#st-kaart .st-cumlaude.voldaan .st-segment i { background: var(--st-klaar); }
+#st-kaart .st-cumlaude > p:first-child { margin: 0 0 6px; }
+#st-kaart .st-cumlaude ul { margin: 8px 0 0; padding: 0; list-style: none; }
+#st-kaart .st-cumlaude li { display: flex; justify-content: space-between; padding: 2px 0; }
+#st-kaart .st-cumlaude li .st-getal { color: var(--st-tekort); }
+#st-kaart .st-melding { margin: 0; font-size: 14px; color: var(--st-zacht); }
+#st-kaart .st-fout { color: var(--st-tekort); }
+#st-kaart .st-sub, #st-kaart .st-voet { margin: 6px 0 0; font-size: 12px; color: var(--st-zacht); }
+#st-kaart .st-voet { margin: 0; line-height: 1.4; }
+#st-kaart .st-getal { font-family: var(--st-mono); font-variant-numeric: tabular-nums; }
+
+/* 1. Total with one bar, split into the phases */
+#st-kaart .st-totaal { margin: 0 0 8px; font-size: 14px; color: var(--st-zacht); }
+#st-kaart .st-totaal b { font-size: 28px; line-height: 1; color: var(--st-inkt); }
+#st-kaart .st-balk { display: flex; gap: 3px; height: 10px; }
+#st-kaart .st-segment { flex-basis: 0; background: var(--st-spoor); border-radius: 2px; overflow: hidden; }
+#st-kaart .st-segment i { display: block; height: 100%; background: var(--st-vol); }
+#st-kaart .st-segment.open i { background: var(--st-huidig); }
+
+/* 2. Phases (klaar = done, open = can be worked on, dicht = conditions not met) and the shortfalls of each open phase */
+#st-kaart .st-fases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
+#st-kaart .st-fases li {
+  display: flex; flex-direction: column; gap: 2px; padding: 6px 8px;
+  border: 1px solid var(--st-lijn); border-radius: 6px; font-size: 12px; color: var(--st-zacht);
+}
+#st-kaart .st-fases li.klaar .st-getal { color: var(--st-klaar); }
+#st-kaart .st-fases li.open { border-color: var(--st-huidig); color: var(--st-inkt); box-shadow: inset 0 0 0 1px var(--st-huidig); }
+#st-kaart .st-fases li.dicht { border-style: dashed; background: var(--st-spoor); }
+#st-kaart .st-na { font-size: 11px; }
+#st-kaart .st-let-op { color: var(--st-tekort); }
+#st-kaart .st-fase { font-weight: 600; }
+#st-kaart .st-tekorten { margin-top: 12px; font-size: 13px; }
+#st-kaart .st-tekorten p { margin: 0 0 4px; }
+#st-kaart details.st-tekorten summary { cursor: pointer; color: var(--st-zacht); }
+#st-kaart details.st-tekorten summary b { color: var(--st-inkt); }
+#st-kaart details.st-tekorten[open] summary { margin-bottom: 4px; }
+#st-kaart .st-tekorten ul { margin: 0; padding: 0; list-style: none; columns: 2; column-gap: 24px; }
+#st-kaart .st-tekorten li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; break-inside: avoid; }
+#st-kaart .st-tekorten li .st-getal { color: var(--st-tekort); }
+
+/* 3. Matrix competency × level */
+#st-kaart .st-matrix-rand { overflow-x: auto; }
+#st-kaart .st-matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
+#st-kaart .st-matrix th, #st-kaart .st-matrix td { padding: 4px 8px; border-bottom: 1px solid var(--st-lijn); text-align: left; }
+#st-kaart .st-matrix thead th { font-size: 11px; font-weight: 600; color: var(--st-zacht); }
+#st-kaart .st-matrix tbody th { font-weight: 500; }
+#st-kaart .st-matrix .st-getal { text-align: right; white-space: nowrap; }
+#st-kaart .st-matrix td.vol { color: var(--st-klaar); }
+#st-kaart .st-matrix td.tekort { color: var(--st-tekort); font-weight: 600; }
+#st-kaart .st-matrix td.leeg { color: var(--st-lijn); }
+#st-kaart .st-matrix td small { font-size: 11px; font-weight: 400; color: var(--st-zacht); }
+#st-kaart .st-matrix tr.st-vrij th { font-style: italic; color: var(--st-zacht); }
+#st-kaart .st-matrix tr:last-child > * { border-bottom: 0; }
+
+@media (max-width: 640px) {
+  #st-kaart .st-fases { grid-template-columns: repeat(2, 1fr); }
+  #st-kaart .st-tekorten ul { columns: 1; }
+}

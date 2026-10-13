@@ -1,21 +1,9 @@
 // EC-overzicht: behaalde studiepunten van al je studenten naast elkaar.
-// Leest alleen (GraphQL-queries die ffwd zelf ook stelt); er wordt niets opgeslagen of verstuurd.
+// Leest alleen (via vraag() uit gedeeld.js); er wordt niets opgeslagen of verstuurd.
 
-const API = 'https://api.ffwd.school/api';
 const EC_TOTAAL = 240;
 let cache = null;
 let staat = { groep: 'alle', sorteer: 'totaal', omlaag: true };
-
-async function vraag(query, variables) {
-  const r = await fetch(API, {
-    method: 'POST', credentials: 'include',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ query, variables }),
-  });
-  const j = await r.json();
-  if (j.errors) throw new Error(j.errors.map(e => e.message).join('; '));
-  return j.data;
-}
 
 async function laadData(voortgang) {
   const basis = await vraag(`{ competencies { id title position } groups { id title students { id name studentId } } }`);
@@ -51,16 +39,6 @@ async function laadData(voortgang) {
 async function perStuk(items, tegelijk, fn) {
   const rij = [...items];
   await Promise.all(Array.from({ length: tegelijk }, async () => { while (rij.length) await fn(rij.shift()); }));
-}
-
-function el(tag, attrs = {}, ...kinderen) {
-  const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
-    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
-  }
-  for (const k of kinderen.flat()) if (k != null) e.append(k);
-  return e;
 }
 
 // ---------- Paneel ----------

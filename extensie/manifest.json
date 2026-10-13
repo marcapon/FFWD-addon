@@ -1,18 +1,25 @@
 {
   "manifest_version": 3,
   "name": "ffwd addon",
-  "version": "0.1.0",
-  "description": "Extra functions inside app.ffwd.school, starting with an EC overview per student. Personal use only.",
+  "version": "0.2.0",
+  "description": "Extra functions inside app.ffwd.school: a progress card on each student page and an EC overview of all students. Personal use only.",
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
       "matches": [
         "https://app.ffwd.school/*"
       ],
       "css": [
-        "ec-overzicht.css"
+        "ec-overzicht.css",
+        "statuskaart.css"
       ],
       "js": [
-        "ec-overzicht.js"
+        "gedeeld.js",
+        "status.js",
+        "ec-overzicht.js",
+        "statuskaart.js"
       ],
       "run_at": "document_idle"
     }

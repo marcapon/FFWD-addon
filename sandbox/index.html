@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ffwd addon sandbox</title>
+<!-- Sandbox: nagemaakte ffwd-studentpagina (zelfde opbouw en Tailwind-classes als app.ffwd.school, 13-10-2026)
+     met een nep-API. Laadt dezelfde bestanden als de extensie. Alleen verzonnen data; openen als lokaal bestand. -->
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="stylesheet" href="../extensie/ec-overzicht.css">
+<link rel="stylesheet" href="../extensie/statuskaart.css">
+<style>
+  /* Wat ffwd zelf in zijn eigen CSS heeft (geen Tailwind): menu-items en de labels bovenaan */
+  a.light { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; color: #374151; }
+  a.light:hover, a.light.router-link-active { background: #f3f4f6; font-weight: 600; }
+  ul.labels li { white-space: nowrap; padding: 2px 10px; background: #fff; border: 1px solid #e5e7eb; border-radius: 9999px; font-size: 13px; color: #6b7280; }
+  ul.labels li strong { color: #111827; margin-left: 4px; }
+
+  /* Bedieningsbalk van de sandbox: hoort niet bij ffwd */
+  #sandbox-balk {
+    position: fixed; right: 16px; bottom: 16px; z-index: 60; width: 300px; padding: 12px 14px;
+    background: #fffbea; border: 2px dashed #b45309; border-radius: 10px; font-size: 13px; color: #111827;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+  }
+  #sandbox-balk b { font: 700 11px ui-monospace, Menlo, monospace; letter-spacing: .06em; color: #b45309; }
+  #sandbox-balk label { display: block; margin-top: 8px; }
+  #sandbox-balk select { width: 100%; margin-top: 2px; padding: 4px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+  #sandbox-balk button { margin-top: 8px; padding: 3px 10px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; }
+  #sandbox-balk .uitleg { margin-top: 6px; font-size: 11px; color: #6b7280; }
+</style>
+</head>
+<body>
+<div id="app"><div>
+  <aside class="p-4 pb-0 space-y-4 md:pd-4 md:fixed md:space-y-7 md:w-60 md:h-screen md:flex md:flex-col">
+    <div class="flex items-center"><div><h2 class="font-bold">Sandbox</h2><h3>Docent (verzonnen)</h3></div></div>
+    <nav class="md:flex-grow md:flex md:flex-col">
+      <a class="flex items-center mb-3"><h4 class="font-bold">Menu</h4></a>
+      <div class="md:block md:flex-grow">
+        <ul class="md:flex md:flex-col md:h-full md:pb-4">
+          <li><a href="#" class="light full-width" data-naar="studenten"><span>Studenten</span></a></li>
+          <li><a href="#" class="light full-width" data-naar="sessies"><span>Assessments</span></a></li>
+          <li class="mt-auto"><ul><li><a href="#" class="light full-width"><span>Uitloggen</span></a></li></ul></li>
+        </ul>
+      </div>
+    </nav>
+  </aside>
+  <section class="p-4 md:p-14 md:ml-60 md:min-h-screen md:bg-gray-100">
+    <h2 class="first-letter:uppercase mb-4 text-xl md:mt-4 md:mb-14 md:text-4xl" id="paginatitel">Studenten</h2>
+    <div class="max-w-2xl"><div id="pagina" class="mt-6"></div></div>
+  </section>
+</div></div>
+
+<div id="sandbox-balk">
+  <b>SANDBOX · VERZONNEN DATA</b>
+  <label>Student
+    <select id="kies-student"></select>
+  </label>
+  <label><input type="checkbox" id="traag"> Traag laden (2 seconden)</label>
+  <label><input type="checkbox" id="fout"> API geeft een fout</label>
+  <button id="herteken" type="button">Vue tekent de pagina opnieuw</button>
+  <p class="uitleg">Na het wisselen van traag of fout: klik op Vernieuw in de kaart. Het menu-item EC-overzicht werkt hier ook.</p>
+</div>
+
+<script src="fixtures.js"></script>
+<script>
+  // ---------- Nep-API: beantwoordt de queries van de extensie met verzonnen data ----------
+  const F = FfwdFixtures;
+  const wacht = ms => new Promise(r => setTimeout(r, ms));
+  window.fetch = async (url, opties) => {
+    const { query, variables } = JSON.parse(opties.body);
+    await wacht(document.getElementById('traag').checked ? 2000 : 150);
+    if (document.getElementById('fout').checked) return { json: async () => ({ errors: [{ message: 'gesimuleerde API-fout' }] }) };
+    const student = F.studenten.find(s => s.id === variables?.id);
+    const data = {};
+    if (/\bcompetencies\b/.test(query)) data.competencies = F.competenties;
+    if (/\bprograms\b/.test(query)) data.programs = F.programmas;
+    if (/\bgroups\b/.test(query)) data.groups = [...new Set(F.studenten.map(s => s.groep))].map((g, i) => ({
+      id: 'g' + i, title: g, students: F.studenten.filter(s => s.groep === g).map(({ id, name, studentId }) => ({ id, name, studentId })),
+    }));
+    if (/\bstudentResults\b/.test(query)) data.studentResults = { goals: student?.doelen || [] };
+    if (/\bpastSessions\b/.test(query)) data.pastSessions = (student?.sessies || []).map((title, i) => ({ title, startingAt: `2026-0${i + 1}-15T10:00:00Z` }));
+    return { json: async () => ({ data }) };
+  };
+
+  const kies = document.getElementById('kies-student');
+
+  // ---------- Nagemaakte router: een lokaal bestand heeft geen /students/…-pad ----------
+  let pad = '/students/' + (location.hash.slice(1) || F.studenten[0].id);
+  let laatste = null;
+  // ?cumlaude=aan: zet de cum-laudeschakelaar vooraf aan voor deze student (handig voor screenshots)
+  if (new URLSearchParams(location.search).get('cumlaude') === 'aan') try { localStorage.setItem('cumLaude:' + pad.split('/').pop(), '1'); } catch {}
+  window.ffwdSandboxPad = () => pad;
+  history.pushState = (_staat, _titel, url) => naar(String(url));
+
+  function naar(nieuwPad) {
+    pad = nieuwPad;
+    const id = pad.match(/^\/students\/([^/]+)/)?.[1];
+    if (id) { laatste = id; history.replaceState(null, '', '#' + id); kies.value = id; }
+    herteken();
+  }
+
+  // Zoals Vue: de hele pagina-inhoud opnieuw, dus ook de kaart weg (de extensie moet hem terugzetten)
+  function herteken() {
+    const id = pad.match(/^\/students\/([^/]+)/)?.[1];
+    const s = F.studenten.find(x => x.id === id);
+    document.getElementById('paginatitel').textContent = s ? 'Studenten' : 'Assessments';
+    document.querySelectorAll('a.light[data-naar]').forEach(a => a.classList.toggle('router-link-active', a.dataset.naar === (s ? 'studenten' : 'sessies')));
+    document.getElementById('pagina').innerHTML = s ? `
+      <h2 class="mb-4 text-xl font-bold flex items-center">${s.name}</h2>
+      <div class="space-y-6">
+        <ul class="labels mb-2 -mx-4 px-4 flex gap-2 overflow-auto">
+          <li>Studentnummer:<strong>${s.studentId ?? 'onbekend'}</strong></li>
+          <li>Groep:<strong>${s.groep}</strong></li>
+          <li>Scenario:<strong>${s.rol}</strong></li>
+        </ul>
+        <div><div class="space-y-6 max-w-4xl">
+          <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3"></div>
+          <h2 class="mb-2 text-sm font-bold flex"><span>Afgeronde assessments</span><a class="ml-auto font-normal underline text-sky-500 cursor-pointer">Toon alles</a></h2>
+          <div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+            ${s.sessies.map(t => `<div class="flex flex-col p-4 bg-white rounded-md border border-gray-200">
+              <h2 class="text-xl">${t}</h2><h3 class="text-sm text-gray-500">Individueel assessment</h3>
+              <div class="my-4"><dl class="grid grid-cols-3 text-sm"><dt>Datum:</dt><dd class="col-span-2">15-01-2026</dd></dl></div>
+              <p class="mt-auto text-right"><a href="#" class="text-sky-500">Bekijk</a></p></div>`).join('') || '<p class="text-sm text-gray-500">Nog geen afgeronde assessments.</p>'}
+          </div>
+        </div></div>
+      </div>` : '<p class="text-sm text-gray-500">Geen studentpagina: de statuskaart hoort hier niet te staan.</p>';
+  }
+
+  kies.innerHTML = F.studenten.map(s => `<option value="${s.id}">${s.name} — ${s.rol}</option>`).join('');
+  kies.addEventListener('change', () => naar('/students/' + kies.value));
+  document.getElementById('herteken').addEventListener('click', herteken);
+  document.querySelectorAll('a.light[data-naar]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    naar(a.dataset.naar === 'studenten' ? '/students/' + laatste : '/sessions');
+  }));
+  naar(pad);
+</script>
+<!-- Dezelfde bestanden, in dezelfde volgorde als manifest.json -->
+<script src="../extensie/gedeeld.js"></script>
+<script src="../extensie/status.js"></script>
+<script src="../extensie/ec-overzicht.js"></script>
+<script src="../extensie/statuskaart.js"></script>
+</body>
+</html>
