@@ -1,0 +1,75 @@
+/* EC-overzicht (ec-overzicht.js): a panel over the main area of ffwd.
+   Self-contained: neutral colours that sit next to ffwd's own Tailwind look, fonts inherited from the page. */
+
+:root {
+  --ec-achtergrond: #f3f4f6; --ec-kaart: #ffffff; --ec-kop: #f9fafb; --ec-zweef: #f3f4f6;
+  --ec-inkt: #111827; --ec-zacht: #6b7280; --ec-lijn: #e5e7eb; --ec-rand: #d1d5db;
+  --ec-accent: #111827; --ec-balk: #4b5563;
+  --ec-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ---------- Menu item in the sidebar ---------- */
+#app aside a.light.ec-actief { background: var(--ec-zweef); color: var(--ec-inkt); font-weight: 600; }
+#app aside a.light.router-link-active.ec-gedimd { background: transparent; font-weight: inherit; }
+#app aside .ec-icoon { display: inline-block; width: 16px; margin-right: 8px; font: 700 9px var(--ec-mono); text-align: center; }
+html.ec-open, html.ec-open body { overflow: hidden; }
+
+/* ---------- Panel ---------- */
+#ec-paneel {
+  position: fixed; inset: 0; z-index: 40; overflow: auto;
+  background: var(--ec-achtergrond); color: var(--ec-inkt); padding: 16px;
+}
+#ec-paneel[hidden] { display: none; }
+@media (min-width: 768px) { #ec-paneel { left: 15rem; padding: 40px; } }
+
+#ec-paneel .ec-kop { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin: 8px 0 24px; }
+#ec-paneel .ec-kop h2 { margin: 0; font-size: 28px; font-weight: 700; line-height: 1.1; }
+#ec-paneel .ec-knoppen { margin-left: auto; display: flex; gap: 8px; }
+#ec-paneel .ec-knop {
+  height: 36px; padding: 0 14px; border: 1px solid var(--ec-rand); border-radius: 6px;
+  background: var(--ec-kaart); color: var(--ec-inkt); font-size: 14px; font-weight: 500; cursor: pointer;
+}
+#ec-paneel .ec-knop:hover { background: var(--ec-zweef); }
+#ec-paneel .ec-melding { color: var(--ec-zacht); font-size: 14px; }
+
+/* Group filter: joined segments */
+#ec-paneel .ec-balkje { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+#ec-paneel .ec-toggle { display: inline-flex; flex-wrap: wrap; background: var(--ec-kaart); border: 1px solid var(--ec-rand); border-radius: 6px; overflow: hidden; }
+#ec-paneel .ec-toggle button { height: 34px; padding: 0 14px; border: 0; background: none; color: var(--ec-inkt); font-size: 14px; cursor: pointer; }
+#ec-paneel .ec-toggle button + button { border-left: 1px solid var(--ec-rand); }
+#ec-paneel .ec-toggle button:hover { background: var(--ec-zweef); }
+#ec-paneel .ec-toggle button.actief { background: var(--ec-accent); color: #fff; }
+#ec-paneel .ec-samenvatting, #ec-paneel .ec-voet { font-size: 13px; color: var(--ec-zacht); }
+
+/* Table: one white card */
+#ec-paneel .ec-tabel-rand { background: var(--ec-kaart); border: 1px solid var(--ec-lijn); border-radius: 8px; overflow-x: auto; }
+#ec-paneel .ec-tabel { width: 100%; border-collapse: collapse; font-size: 14px; }
+#ec-paneel .ec-tabel th {
+  position: sticky; top: 0; background: var(--ec-kop); border-bottom: 1px solid var(--ec-lijn);
+  padding: 10px; font-size: 12px; font-weight: 600; color: var(--ec-zacht); text-transform: uppercase; letter-spacing: .04em;
+  white-space: nowrap; cursor: pointer; user-select: none;
+}
+#ec-paneel .ec-tabel th:hover { color: var(--ec-inkt); }
+#ec-paneel .ec-tabel th.gesorteerd { color: var(--ec-inkt); }
+#ec-paneel .ec-tabel td { padding: 8px 10px; border-top: 1px solid var(--ec-lijn); vertical-align: middle; }
+#ec-paneel .ec-tabel tbody tr:first-child td { border-top: 0; }
+#ec-paneel .ec-tabel tbody tr:hover td { background: var(--ec-zweef); }
+#ec-paneel .ec-naam { text-align: left; min-width: 160px; }
+#ec-paneel .ec-naam a { color: var(--ec-inkt); font-weight: 600; text-decoration: none; display: block; }
+#ec-paneel .ec-naam a:hover { text-decoration: underline; }
+#ec-paneel .ec-naam a.onbekend { font-weight: 400; font-style: italic; }
+#ec-paneel .ec-sub { display: block; font-size: 12px; color: var(--ec-zacht); margin-top: 2px; }
+#ec-paneel .ec-getal { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#ec-paneel td.ec-getal.leeg { color: var(--ec-zacht); opacity: .5; }
+#ec-paneel th.ec-niveau, #ec-paneel td.ec-niveau { background: rgba(17, 24, 39, .025); }
+#ec-paneel .ec-tabel tr > .ec-niveau:nth-last-child(3) { border-left: 1px solid var(--ec-rand); }
+
+/* Total: the number with a progress bar towards 240 EC */
+#ec-paneel .ec-totaal { min-width: 120px; }
+#ec-paneel .ec-totaal b { display: inline-block; min-width: 34px; font-size: 16px; }
+#ec-paneel .ec-balk {
+  display: inline-block; vertical-align: middle; width: 64px; height: 8px; margin-left: 8px;
+  border-radius: 999px; background: var(--ec-lijn); overflow: hidden;
+}
+#ec-paneel .ec-balk i { display: block; height: 100%; background: var(--ec-balk); }
+#ec-paneel .ec-voet { margin-top: 12px; }

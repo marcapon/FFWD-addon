@@ -1,0 +1,11 @@
+.DS_Store
+*.zip
+*.crx
+*.pem
+
+# Student data never goes into git (exports, dumps, local test data)
+*.csv
+*.json
+!extensie/manifest.json
+data/
+export/

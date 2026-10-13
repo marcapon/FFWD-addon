@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "ffwd addon",
+  "version": "0.1.0",
+  "description": "Extra functions inside app.ffwd.school, starting with an EC overview per student. Personal use only.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://app.ffwd.school/*"
+      ],
+      "css": [
+        "ec-overzicht.css"
+      ],
+      "js": [
+        "ec-overzicht.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
