@@ -9,29 +9,34 @@
 // - Alleen het exacte niveau telt: N3 vult geen N2-eis.
 // - Binnen een fase eerst de eisen per competentie vullen, daarna de keuze-eisen (zonder competentie)
 //   van hetzelfde niveau. Wat dan overblijft is 'boven de eisen'.
-// - Fases lopen niet strikt na elkaar. Een fase is open als haar voorwaarden vol zijn (VOORWAARDEN);
+// - Fases lopen niet strikt na elkaar. Een fase is open als aan haar voorwaarden is voldaan (VOORWAARDEN):
+//   de Hoofdfase na 54 EC in de Propedeuse (N1), de Stage na de Propedeuse, Afstuderen na Hoofdfase en Stage;
 //   alle open fases die nog niet vol zijn tonen hun tekorten. EC in een fase die nog niet open is
 //   tellen wel mee, maar worden gemeld.
-// - Cum laude (aan te zetten per student): in de Hoofdfase verschuift 15 EC van Keuze N2 naar Keuze N3.
-//   De student moet dan 21 EC op N3 halen in de Hoofdfase (Onderzoeken N3 3 + Keuze N3 18).
-//   Stage- en afstudeerassessments tellen daar niet voor (CUM_LAUDE). Minor en exchange tellen voorlopig
-//   wel mee: ffwd heeft er geen eigen soort voor (besloten 13-10-2026).
+// - Cum laude (aan te zetten per student) is een aparte toets; de eisen van de fases en het totaal
+//   veranderen er niet door. De student haalt 21 EC op N3 in de Hoofdfase: de N3-eisen van de Hoofdfase
+//   met 15 EC extra Keuze N3 (Onderzoeken N3 3 + Keuze N3 18). Stage- en afstudeerassessments tellen
+//   daar niet voor (CUM_LAUDE). Minor en exchange tellen voorlopig wel mee: ffwd heeft er geen eigen
+//   soort voor (besloten 13-10-2026).
+// - Cum laude is niet meer haalbaar als het tekort op N3 groter is dan de ruimte die in de Hoofdfase
+//   nog over is: de open keuze-eisen en de open N3-eisen. Open verplichte N2-eisen zijn geen ruimte.
 // - De matrix (competentie × niveau) toont alleen fases zonder eigen soort assessment (Propedeuse,
 //   Hoofdfase). Stage en Afstuderen worden in één keer beoordeeld en staan alleen bij de fases.
 
 const FfwdStatus = (() => {
-  // ffwd `programs` kent geen volgorde of voorwaarden; daarom hier, op titel van de fase
+  // ffwd `programs` kent geen volgorde of voorwaarden; daarom hier, op titel van de fase.
+  // { fase } = die fase is vol; { fase, ec } = minstens zoveel EC behaald in die fase.
   const VOORWAARDEN = {
     Propedeuse: [],
-    Hoofdfase: [],
-    Stage: ['Propedeuse'],
-    Afstuderen: ['Hoofdfase', 'Stage'],
+    Hoofdfase: [{ fase: 'Propedeuse', ec: 54 }], // 54 EC op N1
+    Stage: [{ fase: 'Propedeuse' }],
+    Afstuderen: [{ fase: 'Hoofdfase' }, { fase: 'Stage' }],
   };
 
   const CUM_LAUDE = {
     fase: 'Hoofdfase',
-    verschuif: { van: '2', naar: '3', ec: 15 }, // Keuze N2 54 → 39, Keuze N3 3 → 18
-    niveau: '3',                                // 21 EC op N3: alle N3-eisen van de Hoofdfase na de verschuiving
+    verschuif: { van: '2', naar: '3', ec: 15 }, // 15 van de 54 Keuze N2 moeten op N3: Keuze N3 3 → 18
+    niveau: '3',                                // 21 EC op N3: de N3-eisen van de Hoofdfase na de verschuiving
     nietSoorten: ['internship', 'graduation'], // stage en afstuderen
   };
   const teltVoorCumLaude = sessie => !CUM_LAUDE.nietSoorten.includes(sessie?.kind);
@@ -73,14 +78,16 @@ const FfwdStatus = (() => {
 
   const tekortenVan = eisen => eisen.filter(e => e.gevuld < e.vereist).map(e => ({ ...e, tekort: e.vereist - e.gevuld }));
 
-  function verschuifVoorCumLaude(fase) {
+  // De cum-laude-eisen: een kopie van de N3-eisen van de fase, met de verschuiving erbij.
+  // null als de fase niet de verwachte keuze-eis heeft.
+  function cumLaudeEisen(fase) {
     const { van, naar, ec: n } = CUM_LAUDE.verschuif;
-    const keuze = niveau => fase.eisen.find(e => !e.competentie && e.niveau === niveau);
-    if (!keuze(van) || keuze(van).vereist < n) return false;
-    if (!keuze(naar)) fase.eisen.push({ competentie: null, niveau: naar, vereist: 0, gevuld: 0 });
-    keuze(van).vereist -= n;
-    keuze(naar).vereist += n;
-    return true;
+    const keuzeVan = fase.eisen.find(e => !e.competentie && e.niveau === van);
+    if (!keuzeVan || keuzeVan.vereist < n) return null;
+    const eisen = fase.eisen.filter(e => e.niveau === naar).map(e => ({ ...e, gevuld: 0 }));
+    const keuzeNaar = eisen.find(e => !e.competentie) || eisen[eisen.push({ competentie: null, niveau: naar, vereist: 0, gevuld: 0 }) - 1];
+    keuzeNaar.vereist += n;
+    return eisen;
   }
 
   function bereken({ competencies, programs, goals, cumLaude = false }) {
@@ -96,8 +103,6 @@ const FfwdStatus = (() => {
       potten: new Map(),   // per competentie|niveau: EC die nog niet aan een eis zijn toegewezen
       pottenCL: new Map(), // idem, alleen assessments die voor cum laude tellen
     }));
-    const clFase = cumLaude ? fases.find(f => f.titel === CUM_LAUDE.fase) : null;
-    const clMogelijk = clFase ? verschuifVoorCumLaude(clFase) : false;
 
     const behaaldPerCel = new Map(); // alleen EC in fases die in de matrix staan
     let behaald = 0, zonderFase = 0;
@@ -115,29 +120,38 @@ const FfwdStatus = (() => {
       if (teltVoorCumLaude(doel.session)) fase.pottenCL.set(k, (fase.pottenCL.get(k) || 0) + punten);
     }
 
-    // Cum laude: dezelfde N3-eisen van de Hoofdfase, maar alleen gevuld met assessments die meetellen
-    let cl = null;
-    if (clMogelijk) {
-      const eisen = verdeel(clFase.eisen.filter(e => e.niveau === CUM_LAUDE.niveau).map(e => ({ ...e, gevuld: 0 })), new Map(clFase.pottenCL));
-      cl = { fase: clFase.id, niveau: CUM_LAUDE.niveau, eisen, vereist: som(eisen, e => e.vereist), gevuld: som(eisen, e => e.gevuld), tekorten: tekortenVan(eisen) };
-      cl.voldaan = cl.gevuld >= cl.vereist;
-    }
-
     for (const f of fases) {
       f.naarKeuze = new Map();
       verdeel(f.eisen, f.potten, f.naarKeuze);
       f.over = f.potten; // wat na het verdelen in de potten bleef: telt nergens voor
       delete f.potten;
-      delete f.pottenCL;
       f.vereist = som(f.eisen, e => e.vereist);
       f.gevuld = som(f.eisen, e => e.gevuld);
       f.boven = f.behaald - f.gevuld;
       f.klaar = f.gevuld >= f.vereist;
       f.tekorten = tekortenVan(f.eisen);
     }
+    // Cum laude: alleen gevuld met assessments die meetellen; de fases zelf blijven ongewijzigd
+    let cl = null;
+    const clFase = cumLaude ? fases.find(f => f.titel === CUM_LAUDE.fase) : null;
+    const clEisen = clFase ? cumLaudeEisen(clFase) : null;
+    if (clEisen) {
+      const eisen = verdeel(clEisen, new Map(clFase.pottenCL));
+      const ruimte = som(clFase.tekorten.filter(t => !t.competentie || t.niveau === CUM_LAUDE.niveau), t => t.tekort);
+      cl = { fase: clFase.id, niveau: CUM_LAUDE.niveau, eisen, vereist: som(eisen, e => e.vereist), gevuld: som(eisen, e => e.gevuld), tekorten: tekortenVan(eisen), ruimte };
+      cl.tekort = cl.vereist - cl.gevuld;
+      cl.voldaan = cl.tekort <= 0;
+      cl.haalbaar = cl.voldaan || cl.tekort <= ruimte;
+    }
+    for (const f of fases) delete f.pottenCL;
+
     for (const f of fases) {
-      f.na = VOORWAARDEN[f.titel] || [];
-      const open = f.na.every(t => fases.find(x => x.titel === t)?.klaar ?? true);
+      const voorwaarden = VOORWAARDEN[f.titel] || [];
+      f.na = voorwaarden.map(v => (v.ec ? `${v.ec} EC ${v.fase}` : v.fase));
+      const open = voorwaarden.every(v => {
+        const x = fases.find(x => x.titel === v.fase);
+        return !x || (v.ec ? x.behaald >= v.ec : x.klaar);
+      });
       f.staat = f.klaar ? 'klaar' : open ? 'open' : 'dicht';
       f.vroeg = !open && f.behaald > 0; // EC behaald terwijl de fase nog niet open was
     }

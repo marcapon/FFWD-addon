@@ -19,11 +19,12 @@ test('de eisen van alle fases tellen op tot 240 EC', () => {
   assert.deepEqual(st.fases.map(f => f.vereist), [60, 120, 30, 30]);
 });
 
-test('zonder resultaten: alles 0, propedeuse en hoofdfase open, stage en afstuderen dicht', () => {
+test('zonder resultaten: alles 0, alleen de propedeuse open', () => {
   const st = status('s-onbekend');
   assert.equal(st.totaal.behaald, 0);
-  assert.deepEqual(st.open, ['p-prop', 'p-hoofd']);
-  assert.deepEqual(st.fases.map(f => f.staat), ['open', 'open', 'dicht', 'dicht']);
+  assert.deepEqual(st.open, ['p-prop']);
+  assert.deepEqual(st.fases.map(f => f.staat), ['open', 'dicht', 'dicht', 'dicht']);
+  assert.deepEqual(st.fases.map(f => f.na), [[], ['54 EC Propedeuse'], ['Propedeuse'], ['Hoofdfase', 'Stage']]);
   assert.equal(fase(st, 'p-prop').tekorten.length, 5);
 });
 
@@ -32,7 +33,7 @@ test('eerstejaars: N1-resultaten vullen de propedeuse, open doelen tellen niet',
   const prop = fase(st, 'p-prop');
   assert.equal(st.totaal.behaald, 24);
   assert.equal(prop.gevuld, 24);
-  assert.deepEqual(st.open, ['p-prop', 'p-hoofd']);
+  assert.deepEqual(st.open, ['p-prop'], 'hoofdfase pas open na 54 EC');
   assert.deepEqual(prop.tekorten.map(t => [t.competentie, t.tekort]), [['c-ond', 6], ['c-cre', 12], ['c-org', 6], ['c-ler', 12]]);
 });
 
@@ -135,10 +136,8 @@ test('matrix: stage- en afstudeer-EC staan er niet in', () => {
   assert.equal(cel('c-cre', '2').behaald, 54, 'zonder de 21 EC Creëren N2 uit de stage');
 });
 
-test('matrix met cum laude: Keuze N3 18, Keuze N2 39, Onderzoeken N3 3', () => {
-  const st = metCL('s-jesse');
-  assert.deepEqual(st.vrij.map(v => v.vereist), [0, 39, 18]);
-  assert.equal(st.matrix.find(m => m.id === 'c-ond').cellen.find(c => c.niveau === '3').vereist, 3);
+test('matrix met cum laude: ongewijzigd (Keuze N2 54, Keuze N3 3)', () => {
+  assert.deepEqual(metCL('s-jesse').vrij.map(v => v.vereist), [0, 54, 3]);
 });
 
 test('resultaat met amount null of 0 telt niet', () => {
@@ -156,7 +155,7 @@ test('stage beoordeeld vóór een afgeronde propedeuse: de EC tellen en worden g
   assert.equal(stage.gevuld, 30);
   assert.equal(stage.vroeg, true);
   assert.deepEqual(stage.na, ['Propedeuse']);
-  assert.deepEqual(st.open, ['p-prop', 'p-hoofd']);
+  assert.deepEqual(st.open, ['p-prop']);
 });
 
 test('geen melding als de voorwaarden vol zijn', () => {
@@ -184,22 +183,44 @@ test('cum laude uit: geen cum-laudegegevens en de gewone eisen', () => {
   assert.equal(eis(fase(st, 'p-hoofd'), null, '3').vereist, 3);
 });
 
-test('cum laude aan: 15 EC schuiven in de hoofdfase van Keuze N2 naar Keuze N3; totaal blijft 120', () => {
-  const hoofd = fase(metCL('s-jesse'), 'p-hoofd');
-  assert.equal(eis(hoofd, null, '2').vereist, 39);
-  assert.equal(eis(hoofd, null, '3').vereist, 18);
-  assert.equal(hoofd.vereist, 120);
+test('cum laude aan: de fases en het totaal veranderen niet; de toets vraagt Onderzoeken N3 3 + Keuze N3 18', () => {
+  const aan = metCL('s-noor'), uit = metCL('s-noor', false);
+  assert.deepEqual(aan.fases.map(f => f.gevuld), uit.fases.map(f => f.gevuld));
+  assert.equal(aan.totaal.gevuld, 180);
+  assert.deepEqual(aan.cumLaude.eisen.map(e => [e.competentie, e.vereist]), [['c-ond', 3], [null, 18]]);
 });
 
 test('cum laude aan: N3-EC in de hoofdfase tellen voor de 21, met de tekorten per eis', () => {
   const st = metCL('s-jesse');
-  const hoofd = fase(st, 'p-hoofd');
-  assert.equal(eis(hoofd, null, '3').gevuld, 12);
-  assert.equal(eis(hoofd, 'c-ond', '3').gevuld, 3);
+  assert.equal(eis(fase(st, 'p-hoofd'), null, '3').gevuld, 3, 'de fase zelf rekent met Keuze N3 3');
   assert.equal(st.cumLaude.vereist, 21);
   assert.equal(st.cumLaude.gevuld, 15);
   assert.equal(st.cumLaude.voldaan, false);
   assert.deepEqual(st.cumLaude.tekorten.map(t => [t.competentie, t.tekort]), [[null, 6]]);
+});
+
+test('cum laude haalbaar: tekort past in de open keuze- en N3-ruimte van de hoofdfase', () => {
+  const st = metCL('s-jesse');
+  assert.equal(st.cumLaude.ruimte, 34, 'Keuze N2 nog 34');
+  assert.equal(st.cumLaude.haalbaar, true);
+});
+
+test('cum laude niet meer haalbaar: hoofdfase vol, te weinig N3', () => {
+  const st = metCL('s-noor');
+  assert.equal(st.cumLaude.gevuld, 6);
+  assert.equal(st.cumLaude.tekort, 15);
+  assert.equal(st.cumLaude.ruimte, 0);
+  assert.equal(st.cumLaude.haalbaar, false);
+});
+
+test('cum laude: open verplichte N2-eisen tellen niet als ruimte', () => {
+  // Hoofdfase bijna vol: alleen Creëren N2 nog 9 open (verplicht N2), N3 alleen Onderzoeken 3 en Keuze 3
+  const doelen = [F.r('c-ond', 2, 12), F.r('c-cre', 2, 15), F.r('c-org', 2, 6), F.r('c-com', 2, 6), F.r('c-ler', 2, 12),
+    F.r('c-com', 2, 54), F.r('c-ond', 3, 3), F.r('c-cre', 3, 3)];
+  const st = bereken({ competencies: F.competenties, programs: F.programmas, goals: doelen, cumLaude: true });
+  assert.equal(fase(st, 'p-hoofd').vereist - fase(st, 'p-hoofd').gevuld, 9);
+  assert.equal(st.cumLaude.ruimte, 0);
+  assert.equal(st.cumLaude.haalbaar, false);
 });
 
 test('cum laude aan: tekorten per N3-eis, ook zonder N3-resultaten', () => {
@@ -221,4 +242,21 @@ test('cum laude voldaan met 21 EC op N3 uit gewone assessments', () => {
     goals: [F.r('c-ond', 3, 3), F.r('c-cre', 3, 12), F.r('c-ler', 3, 6, 'integral')] });
   assert.equal(st.cumLaude.gevuld, 21);
   assert.equal(st.cumLaude.voldaan, true);
+});
+
+test('hoofdfase gaat open bij 54 EC in de propedeuse, ook als die nog niet vol is', () => {
+  const opN1 = n => bereken({ competencies: F.competenties, programs: F.programmas,
+    goals: [F.r('c-ond', 1, 12), F.r('c-cre', 1, 24), F.r('c-ler', 1, 12), F.r('c-org', 1, n)] });
+  assert.equal(fase(opN1(3), 'p-hoofd').staat, 'dicht', '51 EC');
+  assert.equal(fase(opN1(6), 'p-hoofd').staat, 'open', '54 EC');
+  assert.equal(fase(opN1(6), 'p-prop').staat, 'open', 'propedeuse nog niet vol: 54 van 60');
+  assert.equal(fase(opN1(6), 'p-stage').staat, 'dicht', 'stage pas na een volle propedeuse');
+});
+
+test('N2-EC vóór 54 EC in de propedeuse: hoofdfase dicht, de EC tellen en worden gemeld', () => {
+  const st = bereken({ competencies: F.competenties, programs: F.programmas, goals: [F.r('c-ond', 1, 30), F.r('c-cre', 2, 6)] });
+  const hoofd = fase(st, 'p-hoofd');
+  assert.equal(hoofd.staat, 'dicht');
+  assert.equal(hoofd.vroeg, true);
+  assert.equal(hoofd.gevuld, 6);
 });

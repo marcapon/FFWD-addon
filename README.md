@@ -4,9 +4,10 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 
 ## Functies
 - **Statuskaart** op elke studentpagina (`/students/:id`), tussen de metadata en de afgeronde assessments:
-  - het totaal van 240 EC, met een balk die is opgedeeld in de fases;
-  - de vier fases (Propedeuse, Hoofdfase, Stage, Afstuderen) tegen de eisen uit ffwd `programs`, elk klaar, open of nog dicht, met de tekorten van elke open fase;
-  - een matrix van competentie × niveau voor de Propedeuse en de Hoofdfase. Op N1 staat gevuld/vereist. Op N2 en N3 staat behaald/verplicht, bijvoorbeeld 54/24; bij hoveren zie je de uitsplitsing in verplicht, keuze en wat nergens voor telt. Stage en Afstuderen worden in één keer beoordeeld en staan alleen bij de fases.
+  - het totaal van 240 EC;
+  - de vier fases (Propedeuse, Hoofdfase, Stage, Afstuderen) tegen de eisen uit ffwd `programs`, elk met een eigen balk en klaar, open of nog dicht;
+  - **Nog te behalen:** de tekorten van elke open fase, met cum laude direct bij de Hoofdfase;
+  - **Per competentie** (standaard ingeklapt): een matrix van competentie × niveau voor de Propedeuse en de Hoofdfase, overal behaald/verplicht, bijvoorbeeld 54/24. Bij hoveren zie je de uitsplitsing in verplicht, keuze en wat nergens voor telt. Groen = vol, oranje = deels, grijs = nog niets. Stage en Afstuderen worden in één keer beoordeeld en staan alleen bij de fases.
 - **EC-overzicht**: een menu-item in de zijbalk van ffwd. Het opent een tabel met de behaalde EC van al je studenten:
   - het totaal, met een balk die de voortgang naar 240 EC laat zien;
   - EC per competentie;
@@ -26,14 +27,16 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 - Alleen het exacte niveau telt: N3 vult geen N2-eis.
 - Stage en Afstuderen worden in één assessment beoordeeld: alle 30 EC tegelijk, of nog niets. Zolang ze lopen, staat er "wordt in één assessment beoordeeld".
 - Binnen een fase eerst de eisen per competentie, daarna de keuze-EC op hetzelfde niveau. Wat overblijft is 'boven de eisen'.
-- Fases lopen niet strikt na elkaar. Propedeuse en Hoofdfase zijn altijd open, de Stage gaat open na de Propedeuse, en Afstuderen na de Hoofdfase én de Stage. Dit staat in `VOORWAARDEN` in `status.js`.
+- Fases lopen niet strikt na elkaar. De Propedeuse is altijd open, de Hoofdfase gaat open na 54 EC in de Propedeuse (N1), de Stage na een volle Propedeuse, en Afstuderen na de Hoofdfase én de Stage. Dit staat in `VOORWAARDEN` in `status.js`.
 - Van elke open fase die nog niet vol is, toont de kaart de tekorten, onder elkaar. Een open fase zonder EC staat ingeklapt op één regel; klik om de eisen te zien.
 - EC in een fase die nog niet open is, tellen wel mee. De kaart meldt ze apart.
 
 ## Cum laude
 - Per student zet je in de kaart een schakelaar **Cum laude** aan. Die wordt onthouden in de opslag van de extensie (`chrome.storage.local`), alleen in je eigen browser.
-- Staat hij aan, dan verschuift in de Hoofdfase 15 EC van Keuze N2 naar Keuze N3 (54 → 39 en 3 → 18). De student moet dan 21 EC op N3 halen in de Hoofdfase: Onderzoeken N3 3 plus Keuze N3 18.
-- Stage en afstuderen tellen niet mee voor die 21 EC. Minor en exchange tellen voorlopig wel mee, omdat ffwd er geen eigen soort voor heeft. De regels staan in `CUM_LAUDE` in `status.js`.
+- Cum laude is een aparte toets: de eisen van de fases en het totaal veranderen er niet door. De student haalt 21 EC op N3 in de Hoofdfase: Onderzoeken N3 3 plus Keuze N3 18 (3 + 15 die anders op N2 mogen).
+- Stage en afstuderen tellen niet mee voor die 21 EC. Minor en exchange tellen voorlopig wel mee, omdat ffwd er geen eigen soort voor heeft.
+- **Niet meer haalbaar** als het tekort op N3 groter is dan de ruimte die nog over is in de Hoofdfase: de open keuze-eisen en de open N3-eisen. Open verplichte N2-eisen zijn geen ruimte. De kaart kleurt het blok dan oranje, met een melding.
+- De regels staan in `CUM_LAUDE` in `status.js`.
 
 ## Testen
 - **Rekenregels:** `node --test` in deze map. De tests staan in `tests/` en gebruiken verzonnen studenten uit `sandbox/fixtures.js`.
