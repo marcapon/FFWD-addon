@@ -8,6 +8,10 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
   - de vier fases (Propedeuse, Hoofdfase, Stage, Afstuderen) tegen de eisen uit ffwd `programs`, elk met een eigen balk en klaar, open of nog dicht;
   - **Nog te behalen:** de tekorten van elke open fase, met cum laude direct bij de Hoofdfase;
   - **Per competentie** (standaard ingeklapt): een matrix van competentie × niveau voor de Propedeuse en de Hoofdfase, overal behaald/verplicht, bijvoorbeeld 54/24. Bij hoveren zie je de uitsplitsing in verplicht, keuze en wat nergens voor telt. Groen = vol, oranje = deels, grijs = nog niets. Stage en Afstuderen worden in één keer beoordeeld en staan alleen bij de fases.
+- **Statuskaart bij een assessment**: op een assessmentpagina (`/sessions/:id`) klapt de knop **EC** rechts een paneel open met dezelfde statuskaart, compact.
+  - Bij een assessment met meerdere studenten kies je bovenin de student; ffwd kent niet elke naam, dan staat er "Student 1", "Student 2".
+  - De extensie onthoudt of het paneel open is en welke student je per assessment koos. Esc sluit het paneel.
+  - Op een breed scherm (vanaf ongeveer 1420 px) staat het naast de inhoud van ffwd, anders eroverheen.
 - **EC-overzicht**: een menu-item in de zijbalk van ffwd. Het opent een tabel met de behaalde EC van al je studenten:
   - het totaal, met een balk die de voortgang naar 240 EC laat zien;
   - EC per competentie;
@@ -40,7 +44,7 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 
 ## Testen
 - **Rekenregels:** `node --test` in deze map. De tests staan in `tests/` en gebruiken verzonnen studenten uit `sandbox/fixtures.js`.
-- **Sandbox:** open `sandbox/index.html` in Chrome. Het is een nagemaakte ffwd-studentpagina met een nep-API en verzonnen data, die dezelfde bestanden laadt als de extensie. Met de balk rechtsonder wissel je van student, laat je het laden traag gaan of geeft de API een fout. Je hebt geen inlog nodig en er komt geen echte data aan te pas.
+- **Sandbox:** open `sandbox/index.html` in Chrome. Het zijn nagemaakte ffwd-pagina's (studentpagina, lijst met assessments, assessmentpagina) met een nep-API en verzonnen data, die dezelfde bestanden laden als de extensie. Met de balk linksonder kies je de pagina, laat je het laden traag gaan of geeft de API een fout. `?aside=open` zet het paneel op een assessment vooraf open, `?cumlaude=aan` de cum-laudeschakelaar. Je hebt geen inlog nodig en er komt geen echte data aan te pas.
 - **Echte ffwd:** pas als het in de sandbox klopt, laad je de extensie zoals bij Installeren.
 
 ## Hoe het werkt
@@ -53,13 +57,15 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 | Bestand | Inhoud |
 | --- | --- |
 | `extensie/manifest.json` | laadt de scripts en de stijlen op app.ffwd.school |
-| `extensie/gedeeld.js` | gedeeld: de GraphQL-aanroep `vraag()` en de helper `el()` |
+| `extensie/gedeeld.js` | gedeeld: de GraphQL-aanroep `vraag()`, de helper `el()` en lokaal onthouden (`lees()`, `bewaar()`) |
 | `extensie/status.js` | rekenregels van de statuskaart; puur, zonder DOM of netwerk |
 | `extensie/statuskaart.js` | herkent de studentpagina, plaatst de kaart en tekent hem |
 | `extensie/statuskaart.css` | stijl van de statuskaart |
+| `extensie/assessment-aside.js` | knop en paneel op de assessmentpagina; de kaart komt uit statuskaart.js |
+| `extensie/assessment-aside.css` | stijl van het paneel |
 | `extensie/ec-overzicht.js` | menu-item, paneel en berekening van het EC-overzicht |
 | `extensie/ec-overzicht.css` | eigen stijl van het paneel; werkt zonder andere extensies |
-| `sandbox/` | nagemaakte studentpagina met nep-API en verzonnen testdata |
+| `sandbox/` | nagemaakte studentpagina, lijst met assessments en assessmentpagina, met nep-API en verzonnen testdata |
 | `tests/` | Node-tests van de rekenregels |
 
 ## Regels

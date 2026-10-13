@@ -1,0 +1,47 @@
+/* Assessment aside (assessment-aside.js): a panel on the right of an assessment page with the status card
+   per student. Lives in <body>, outside Vue. Starts below ffwd's fixed top bar (--ffa-boven, measured).
+   ffwd's content is at most 1024px wide and left-aligned, so from about 1420px the panel sits next to it;
+   on narrower screens it lies over the right side, with a shadow. */
+
+:root { --ffa-breedte: 380px; }
+
+#ffa-knop {
+  position: fixed; right: 0; top: calc(var(--ffa-boven, 0px) + 96px); z-index: 31;
+  padding: 10px 8px; border: 1px solid #e5e7eb; border-right: 0; border-radius: 8px 0 0 8px;
+  background: #fff; color: #111827; font: 700 12px/1 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .04em;
+  box-shadow: -2px 2px 8px rgba(0, 0, 0, .08); cursor: pointer;
+}
+#ffa-knop:hover { background: #f3f4f6; }
+#ffa-knop.open { right: var(--ffa-breedte); background: #0284c7; border-color: #0284c7; color: #fff; }
+#ffa-knop:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }
+
+#ffa-aside {
+  position: fixed; top: var(--ffa-boven, 0px); right: 0; bottom: 0; z-index: 30;
+  width: var(--ffa-breedte); max-width: 100vw; box-sizing: border-box; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 12px; padding: 16px;
+  background: #f9fafb; border-left: 1px solid #e5e7eb; box-shadow: -8px 0 24px rgba(0, 0, 0, .08); color: #111827;
+}
+#ffa-aside[hidden] { display: none; }
+@media (min-width: 1420px) { #ffa-aside { box-shadow: none; } }
+
+#ffa-aside .ffa-kop { display: flex; align-items: center; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b7280; }
+#ffa-aside .ffa-sluit { margin-left: auto; padding: 0 4px; border: 0; background: none; font-size: 20px; line-height: 1; color: #6b7280; cursor: pointer; }
+#ffa-aside .ffa-sluit:hover { color: #111827; }
+#ffa-aside .ffa-melding { margin: 0; font-size: 14px; color: #6b7280; }
+#ffa-aside .ffa-fout { color: #b45309; }
+#ffa-aside .ffa-naam { margin: 0; font-size: 14px; font-weight: 600; }
+
+/* One student at a time */
+#ffa-aside .ffa-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+#ffa-aside .ffa-tab {
+  max-width: 100%; padding: 4px 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border: 1px solid #e5e7eb; border-radius: 9999px; background: #fff; color: #374151; font-size: 12px; cursor: pointer;
+}
+#ffa-aside .ffa-tab:hover { border-color: #6b7280; }
+#ffa-aside .ffa-tab[aria-selected="true"] { background: #111827; border-color: #111827; color: #fff; }
+#ffa-aside .ffa-tab:focus-visible { outline: 2px solid #0284c7; outline-offset: 2px; }
+
+/* The status card itself (statuskaart.css), as a white card in the panel */
+#ffa-aside .st-kaart { display: flex; flex-direction: column; padding: 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; }
+/* The aside already says "Studievoortgang"; keep only the switch and refresh of the card header */
+#ffa-aside .st-kaart .st-kop h2 { display: none; }

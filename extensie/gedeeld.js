@@ -1,4 +1,4 @@
-// Gedeeld door alle functies: de GraphQL-aanroep en een helper om DOM-elementen te maken.
+// Gedeeld door alle functies: de GraphQL-aanroep, een helper om DOM-elementen te maken en lokaal onthouden.
 // Content scripts delen één globale scope, dus deze namen bestaan maar één keer.
 
 const API = 'https://api.ffwd.school/api';
@@ -23,4 +23,20 @@ function el(tag, attrs = {}, ...kinderen) {
   }
   for (const k of kinderen.flat()) if (k != null) e.append(k);
   return e;
+}
+
+// Lokaal onthouden, alleen in deze browser: chrome.storage.local in de extensie, localStorage in de sandbox.
+// null = weghalen. Lukt het niet, dan werkt het alleen tot herladen.
+async function lees(sleutel) {
+  try {
+    if (globalThis.chrome?.storage?.local) return (await chrome.storage.local.get(sleutel))[sleutel] ?? null;
+    const waarde = localStorage.getItem(sleutel);
+    return waarde == null ? null : JSON.parse(waarde);
+  } catch { return null; }
+}
+async function bewaar(sleutel, waarde) {
+  try {
+    if (globalThis.chrome?.storage?.local) return waarde == null ? chrome.storage.local.remove(sleutel) : chrome.storage.local.set({ [sleutel]: waarde });
+    waarde == null ? localStorage.removeItem(sleutel) : localStorage.setItem(sleutel, JSON.stringify(waarde));
+  } catch { /* niet opgeslagen */ }
 }

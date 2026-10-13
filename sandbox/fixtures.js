@@ -57,7 +57,13 @@ const FfwdFixtures = (() => {
       sessies: [], doelen: [] },
   ];
 
-  return { competenties, programmas, studenten, r, propedeuseVol, hoofdfaseVol, stageVol, afstuderenVol };
+  // Verzonnen assessments (ffwd `session`): een integraal assessment met drie studenten en een individueel
+  const assessments = [
+    { id: 'a-integraal', title: 'Integraal assessment jaar 2', soort: 'Integraal assessment', studenten: ['s-daan', 's-noor', 's-onbekend'] },
+    { id: 'a-jesse', title: 'Eindassessment Jesse', soort: 'Individueel assessment', studenten: ['s-jesse'] },
+  ];
+
+  return { competenties, programmas, studenten, assessments, r, propedeuseVol, hoofdfaseVol, stageVol, afstuderenVol };
 })();
 
 if (typeof module === 'object') module.exports = FfwdFixtures;

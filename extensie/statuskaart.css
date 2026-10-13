@@ -1,4 +1,5 @@
 /* Statuskaart (statuskaart.js): study progress card on the student page.
+   Styles hang on the class .st-kaart, so the same card can appear elsewhere (assessment aside).
    The card itself uses ffwd's own Tailwind classes (white, rounded, grey border), so it matches the
    assessment cards below it, also with the skin on. Inside: neutral colours, fonts inherited.
    Layout: one view per question (phases, still needed, per competency), 24px between sections,
@@ -12,113 +13,119 @@
   --st-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-#st-kaart { gap: 0; color: var(--st-inkt); }
-#st-kaart h2 { margin: 0; }
-#st-kaart .st-zacht { color: var(--st-zacht); }
-#st-kaart .st-klein { font-size: 12px; color: var(--st-zacht); }
-#st-kaart .st-let-op { color: var(--st-tekort); }
-#st-kaart .st-melding { margin: 12px 0 0; font-size: 14px; color: var(--st-zacht); }
-#st-kaart .st-fout { color: var(--st-tekort); }
-#st-kaart .st-getal { font-family: var(--st-mono); font-variant-numeric: tabular-nums; }
+.st-kaart { gap: 0; color: var(--st-inkt); }
+.st-kaart h2 { margin: 0; }
+.st-kaart .st-zacht { color: var(--st-zacht); }
+.st-kaart .st-klein { font-size: 12px; color: var(--st-zacht); }
+.st-kaart .st-let-op { color: var(--st-tekort); }
+.st-kaart .st-melding { margin: 12px 0 0; font-size: 14px; color: var(--st-zacht); }
+.st-kaart .st-fout { color: var(--st-tekort); }
+.st-kaart .st-getal { font-family: var(--st-mono); font-variant-numeric: tabular-nums; }
 
 /* ---------- Header: title, cum laude switch, refresh ---------- */
-#st-kaart .st-kop { display: flex; align-items: center; }
-#st-kaart .st-schakelaar { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--st-zacht); cursor: pointer; }
-#st-kaart .st-schakelaar input { accent-color: var(--st-open); }
-#st-kaart .st-knop {
+.st-kaart .st-kop { display: flex; align-items: center; }
+.st-kaart .st-schakelaar { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--st-zacht); cursor: pointer; }
+.st-kaart .st-schakelaar input { accent-color: var(--st-open); }
+.st-kaart .st-knop {
   margin-left: auto; padding: 2px 10px; border: 1px solid var(--st-lijn); border-radius: 6px;
   background: transparent; color: var(--st-zacht); font-size: 12px; cursor: pointer;
 }
-#st-kaart .st-schakelaar + .st-knop { margin-left: 10px; }
-#st-kaart .st-knop:hover { color: var(--st-inkt); border-color: var(--st-zacht); }
+.st-kaart .st-schakelaar + .st-knop { margin-left: 10px; }
+.st-kaart .st-knop:hover { color: var(--st-inkt); border-color: var(--st-zacht); }
 
 /* ---------- Total and phases (each phase with its own bar) ---------- */
-#st-kaart .st-totaal { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; font-size: 14px; color: var(--st-zacht); }
-#st-kaart .st-totaal b { font-size: 32px; line-height: 1; color: var(--st-inkt); }
+.st-kaart .st-totaal { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; font-size: 14px; color: var(--st-zacht); }
+.st-kaart .st-totaal b { font-size: 32px; line-height: 1; color: var(--st-inkt); }
 
-#st-kaart .st-balk { display: block; height: 6px; background: var(--st-spoor); border-radius: 3px; overflow: hidden; }
-#st-kaart .st-balk i { display: block; height: 100%; background: var(--st-zacht); border-radius: 3px; }
+.st-kaart .st-balk { display: block; height: 6px; background: var(--st-spoor); border-radius: 3px; overflow: hidden; }
+.st-kaart .st-balk i { display: block; height: 100%; background: var(--st-zacht); border-radius: 3px; }
 
-#st-kaart .st-fases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
-#st-kaart .st-fase { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--st-lijn); border-radius: 8px; font-size: 12px; }
-#st-kaart .st-fase-titel { font-weight: 600; }
-#st-kaart .st-fase-getal { color: var(--st-zacht); font-variant-numeric: tabular-nums; }
-#st-kaart .st-fase-getal b { font-size: 18px; color: var(--st-inkt); }
-#st-kaart .st-fase.klaar .st-vink { color: var(--st-klaar); }
-#st-kaart .st-fase.klaar .st-balk i { background: var(--st-klaar); }
-#st-kaart .st-fase.open { border-color: var(--st-open); box-shadow: inset 0 0 0 1px var(--st-open); }
-#st-kaart .st-fase.open .st-balk i { background: var(--st-open); }
-#st-kaart .st-fase.dicht { border-style: dashed; background: var(--st-spoor); }
-#st-kaart .st-fase.dicht .st-fase-titel, #st-kaart .st-fase.dicht .st-fase-getal b { color: var(--st-zacht); }
-#st-kaart .st-fase.dicht .st-balk { background: var(--st-lijn); }
-#st-kaart .st-fases + .st-let-op { margin: 8px 0 0; }
+.st-kaart .st-fases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.st-kaart .st-fase { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px solid var(--st-lijn); border-radius: 8px; font-size: 12px; }
+.st-kaart .st-fase-titel { font-weight: 600; }
+.st-kaart .st-fase-getal { color: var(--st-zacht); font-variant-numeric: tabular-nums; }
+.st-kaart .st-fase-getal b { font-size: 18px; color: var(--st-inkt); }
+.st-kaart .st-fase.klaar .st-vink { color: var(--st-klaar); }
+.st-kaart .st-fase.klaar .st-balk i { background: var(--st-klaar); }
+.st-kaart .st-fase.open { border-color: var(--st-open); box-shadow: inset 0 0 0 1px var(--st-open); }
+.st-kaart .st-fase.open .st-balk i { background: var(--st-open); }
+.st-kaart .st-fase.dicht { border-style: dashed; background: var(--st-spoor); }
+.st-kaart .st-fase.dicht .st-fase-titel, .st-kaart .st-fase.dicht .st-fase-getal b { color: var(--st-zacht); }
+.st-kaart .st-fase.dicht .st-balk { background: var(--st-lijn); }
+.st-kaart .st-fases + .st-let-op { margin: 8px 0 0; }
 
 /* ---------- Sections ---------- */
-#st-kaart .st-sectie { margin-top: 24px; }
-#st-kaart .st-label { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--st-zacht); }
+.st-kaart .st-sectie { margin-top: 24px; }
+.st-kaart .st-label { margin: 0 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--st-zacht); }
 
 /* Still needed, per open phase; the list reads per row and the value sits next to the label */
-#st-kaart .st-open-fase + .st-open-fase { margin-top: 16px; }
-#st-kaart .st-fase-kop, #st-kaart .st-open-fase summary { margin: 0 0 6px; font-size: 13px; }
-#st-kaart .st-open-fase summary { cursor: pointer; }
-#st-kaart .st-open-fase details:not([open]) summary { margin: 0; }
-#st-kaart .st-tekorten { display: grid; grid-template-columns: repeat(2, minmax(0, 16em)); column-gap: 40px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
-#st-kaart .st-tekorten li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--st-spoor); }
-#st-kaart .st-nog { font-family: var(--st-mono); font-variant-numeric: tabular-nums; color: var(--st-tekort); white-space: nowrap; }
+.st-kaart .st-open-fase + .st-open-fase { margin-top: 16px; }
+.st-kaart .st-fase-kop, .st-kaart .st-open-fase summary { margin: 0 0 6px; font-size: 13px; }
+.st-kaart .st-open-fase summary { cursor: pointer; }
+.st-kaart .st-open-fase details:not([open]) summary { margin: 0; }
+.st-kaart .st-tekorten { display: grid; grid-template-columns: repeat(2, minmax(0, 16em)); column-gap: 40px; margin: 0; padding: 0; list-style: none; font-size: 13px; }
+.st-kaart .st-tekorten li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid var(--st-spoor); }
+.st-kaart .st-nog { font-family: var(--st-mono); font-variant-numeric: tabular-nums; color: var(--st-tekort); white-space: nowrap; }
 
 /* Cum laude: within reach (blue), done (green), out of reach (orange, with a message) */
-#st-kaart .st-cumlaude { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--st-open); border-radius: 0 6px 6px 0; background: var(--st-open-licht); font-size: 13px; }
-#st-kaart .st-cumlaude p { margin: 0; }
-#st-kaart .st-cumlaude .st-balk { background: #fff; }
-#st-kaart .st-cumlaude .st-balk i { background: var(--st-open); }
-#st-kaart .st-cumlaude.voldaan { border-left-color: var(--st-klaar); background: var(--st-klaar-licht); }
-#st-kaart .st-cumlaude.voldaan .st-balk i { background: var(--st-klaar); }
-#st-kaart .st-cumlaude.niet-haalbaar { border-left-color: var(--st-tekort); background: var(--st-tekort-licht); }
-#st-kaart .st-cumlaude.niet-haalbaar .st-balk i { background: var(--st-tekort); }
-#st-kaart .st-cumlaude .st-melding-cl { color: var(--st-tekort); }
+.st-kaart .st-cumlaude { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--st-open); border-radius: 0 6px 6px 0; background: var(--st-open-licht); font-size: 13px; }
+.st-kaart .st-cumlaude p { margin: 0; }
+.st-kaart .st-cumlaude .st-balk { background: #fff; }
+.st-kaart .st-cumlaude .st-balk i { background: var(--st-open); }
+.st-kaart .st-cumlaude.voldaan { border-left-color: var(--st-klaar); background: var(--st-klaar-licht); }
+.st-kaart .st-cumlaude.voldaan .st-balk i { background: var(--st-klaar); }
+.st-kaart .st-cumlaude.niet-haalbaar { border-left-color: var(--st-tekort); background: var(--st-tekort-licht); }
+.st-kaart .st-cumlaude.niet-haalbaar .st-balk i { background: var(--st-tekort); }
+.st-kaart .st-cumlaude .st-melding-cl { color: var(--st-tekort); }
 
 /* ---------- Collapsible sections: per competency, how it counts ---------- */
-#st-kaart .st-uitklap > summary { display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; }
-#st-kaart .st-uitklap > summary::-webkit-details-marker { display: none; }
-#st-kaart .st-uitklap > summary::before { content: '▸'; font-size: 11px; transition: transform 120ms; }
-#st-kaart .st-uitklap[open] > summary::before { transform: rotate(90deg); }
-#st-kaart .st-uitklap > summary.st-label { margin: 0; }
-#st-kaart .st-uitklap[open] > summary.st-label { margin-bottom: 8px; }
-#st-kaart .st-regels { margin-top: 16px; font-size: 12px; color: var(--st-zacht); }
-#st-kaart .st-regels ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.5; list-style: disc; }
+.st-kaart .st-uitklap > summary { display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; }
+.st-kaart .st-uitklap > summary::-webkit-details-marker { display: none; }
+.st-kaart .st-uitklap > summary::before { content: '▸'; font-size: 11px; transition: transform 120ms; }
+.st-kaart .st-uitklap[open] > summary::before { transform: rotate(90deg); }
+.st-kaart .st-uitklap > summary.st-label { margin: 0; }
+.st-kaart .st-uitklap[open] > summary.st-label { margin-bottom: 8px; }
+.st-kaart .st-regels { margin-top: 16px; font-size: 12px; color: var(--st-zacht); }
+.st-kaart .st-regels ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.5; list-style: disc; }
 
 /* Matrix competency × level: behaald/verplicht. Done = green, partly = orange, nothing yet = grey */
-#st-kaart .st-matrix { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
-#st-kaart .st-matrix th, #st-kaart .st-matrix td { padding: 5px 8px; border-bottom: 1px solid var(--st-lijn); text-align: left; }
-#st-kaart .st-matrix th:first-child { width: 34%; }
-#st-kaart .st-matrix thead th { font-size: 11px; font-weight: 600; color: var(--st-zacht); }
-#st-kaart .st-matrix thead small { font: 400 11px system-ui, sans-serif; }
-#st-kaart .st-matrix tbody th { font-weight: 500; }
-#st-kaart .st-matrix .st-getal { text-align: right; white-space: nowrap; }
-#st-kaart .st-matrix td.vol { color: var(--st-klaar); }
-#st-kaart .st-matrix td.deels { color: var(--st-tekort); font-weight: 600; }
-#st-kaart .st-matrix td.nul { color: var(--st-zacht); }
-#st-kaart .st-matrix td.extra { color: var(--st-inkt); }
-#st-kaart .st-matrix td.leeg { color: var(--st-lijn); }
-#st-kaart .st-matrix td.st-tip { outline: none; border-radius: 4px; }
-#st-kaart .st-matrix td.st-tip:hover { background: var(--st-spoor); }
-#st-kaart .st-matrix td.st-tip:focus-visible { box-shadow: inset 0 0 0 2px var(--st-open); }
-#st-kaart .st-matrix tr.st-vrij th { font-style: italic; color: var(--st-zacht); }
-#st-kaart .st-matrix tr:last-child > * { border-bottom: 0; }
+.st-kaart .st-matrix { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
+.st-kaart .st-matrix th, .st-kaart .st-matrix td { padding: 5px 8px; border-bottom: 1px solid var(--st-lijn); text-align: left; }
+.st-kaart .st-matrix th:first-child { width: 34%; }
+.st-kaart .st-matrix thead th { font-size: 11px; font-weight: 600; color: var(--st-zacht); }
+.st-kaart .st-matrix thead small { font: 400 11px system-ui, sans-serif; }
+.st-kaart .st-matrix tbody th { font-weight: 500; }
+.st-kaart .st-matrix .st-getal { text-align: right; white-space: nowrap; }
+.st-kaart .st-matrix td.vol { color: var(--st-klaar); }
+.st-kaart .st-matrix td.deels { color: var(--st-tekort); font-weight: 600; }
+.st-kaart .st-matrix td.nul { color: var(--st-zacht); }
+.st-kaart .st-matrix td.extra { color: var(--st-inkt); }
+.st-kaart .st-matrix td.leeg { color: var(--st-lijn); }
+.st-kaart .st-matrix td.st-tip { outline: none; border-radius: 4px; }
+.st-kaart .st-matrix td.st-tip:hover { background: var(--st-spoor); }
+.st-kaart .st-matrix td.st-tip:focus-visible { box-shadow: inset 0 0 0 2px var(--st-open); }
+.st-kaart .st-matrix tr.st-vrij th { font-style: italic; color: var(--st-zacht); }
+.st-kaart .st-matrix tr:last-child > * { border-bottom: 0; }
 
 /* ---------- Tooltips (.st-tip with data-uitleg) ----------
    Show at once, unlike a title attribute that waits about a second. Above the element, aligned right. */
-#st-kaart .st-tip { position: relative; }
-#st-kaart .st-tip::after {
+.st-kaart .st-tip { position: relative; }
+.st-kaart .st-tip::after {
   content: attr(data-uitleg); position: absolute; right: 0; bottom: calc(100% + 4px); z-index: 5;
   width: max-content; max-width: 260px; padding: 6px 8px; border-radius: 6px;
   background: var(--st-inkt); color: #fff; font: 400 12px/1.35 system-ui, sans-serif; text-align: left; white-space: normal;
   text-decoration: none; box-shadow: 0 4px 12px rgba(0, 0, 0, .15); opacity: 0; pointer-events: none; transition: opacity 60ms;
 }
-#st-kaart .st-tip:hover::after, #st-kaart .st-tip:focus-visible::after, #st-kaart .st-tip:focus-within::after { opacity: 1; }
-#st-kaart .st-kop .st-tip::after { bottom: auto; top: calc(100% + 4px); }
+.st-kaart .st-tip:hover::after, .st-kaart .st-tip:focus-visible::after, .st-kaart .st-tip:focus-within::after { opacity: 1; }
+.st-kaart .st-kop .st-tip::after { bottom: auto; top: calc(100% + 4px); }
+
+/* Narrow variant (.st-smal), e.g. in the assessment aside: phases 2 × 2, one column of shortfalls */
+.st-kaart.st-smal .st-fases { grid-template-columns: repeat(2, 1fr); }
+.st-kaart.st-smal .st-tekorten { grid-template-columns: minmax(0, 1fr); }
+.st-kaart.st-smal .st-matrix th:first-child { width: 30%; }
+.st-kaart.st-smal .st-matrix th, .st-kaart.st-smal .st-matrix td { padding: 5px 4px; }
 
 @media (max-width: 640px) {
-  #st-kaart .st-fases { grid-template-columns: repeat(2, 1fr); }
-  #st-kaart .st-tekorten { grid-template-columns: minmax(0, 1fr); }
+  .st-kaart .st-fases { grid-template-columns: repeat(2, 1fr); }
+  .st-kaart .st-tekorten { grid-template-columns: minmax(0, 1fr); }
 }

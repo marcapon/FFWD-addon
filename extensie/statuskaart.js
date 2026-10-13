@@ -2,8 +2,9 @@
 // tussen de metadata (studentnummer e.d.) en de afgeronde assessments.
 // Leest alleen (via vraag() uit gedeeld.js); de berekening staat in status.js.
 // De cum-laudeschakelaar wordt per student onthouden in de eigen opslag van de extensie (alleen deze browser).
+// FfwdStatuskaart.vul(element, studentId) tekent dezelfde kaart elders, bijvoorbeeld in de assessment-aside.
 
-(() => {
+const FfwdStatuskaart = (() => {
   const NIVEAU = n => 'N' + n;
   let basis = null;                 // belofte: competenties en eisen per fase; gelijk voor iedereen
   const perStudent = new Map();     // studentId → belofte van de resultaten, zolang de pagina open is
@@ -24,22 +25,9 @@
     }`, { id })]).then(([b, d]) => ({ ...b, goals: d.studentResults?.goals || [] }));
   }
 
-  // ---------- Cum laude per student onthouden ----------
-  // In de extensie: chrome.storage.local. In de sandbox (geen extensie): localStorage.
-
-  const clSleutel = id => 'cumLaude:' + id;
-  async function leesCumLaude(id) {
-    try {
-      if (globalThis.chrome?.storage?.local) return !!(await chrome.storage.local.get(clSleutel(id)))[clSleutel(id)];
-      return localStorage.getItem(clSleutel(id)) === '1';
-    } catch { return false; }
-  }
-  async function zetCumLaude(id, aan) {
-    try {
-      if (globalThis.chrome?.storage?.local) return aan ? chrome.storage.local.set({ [clSleutel(id)]: true }) : chrome.storage.local.remove(clSleutel(id));
-      aan ? localStorage.setItem(clSleutel(id), '1') : localStorage.removeItem(clSleutel(id));
-    } catch { /* niet opgeslagen; de schakelaar werkt dan alleen tot herladen */ }
-  }
+  // Cum laude per student onthouden (lees/bewaar uit gedeeld.js)
+  const leesCumLaude = async id => !!(await lees('cumLaude:' + id));
+  const zetCumLaude = (id, aan) => bewaar('cumLaude:' + id, aan ? true : null);
 
   // ---------- Plaatsen ----------
   // Vue tekent de pagina zelf; de kaart staat daartussen en wordt teruggezet als Vue hem weghaalt.
@@ -55,7 +43,7 @@
       return;
     }
     kaart?.remove();
-    const nieuw = el('div', { id: 'st-kaart', 'data-student': id, class: 'flex flex-col p-4 bg-white rounded-md border border-gray-200' });
+    const nieuw = el('div', { id: 'st-kaart', 'data-student': id, class: 'st-kaart flex flex-col p-4 bg-white rounded-md border border-gray-200' });
     labels.after(nieuw);
     vul(nieuw, id);
   }
@@ -196,4 +184,6 @@
   }).observe(document.documentElement, { childList: true, subtree: true });
   addEventListener('popstate', controleer);
   controleer();
+
+  return { vul };
 })();
