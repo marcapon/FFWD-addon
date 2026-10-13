@@ -12,6 +12,15 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
   - Bij een assessment met meerdere studenten kies je bovenin de student; ffwd kent niet elke naam, dan staat er "Student 1", "Student 2".
   - De extensie onthoudt of het paneel open is en welke student je per assessment koos. Esc sluit het paneel.
   - Op een breed scherm (vanaf ongeveer 1420 px) staat het naast de inhoud van ffwd, anders eroverheen.
+- **Assessmentlijst als rijen**: op de lijst met assessments (`/sessions`) wisselt een schakelaar tussen de blokken van ffwd en rijen. De extensie onthoudt je keuze en begint met rijen.
+  - Per rij: datum en tijd, titel met de context, soort, status, studenten en docenten.
+  - Status: Gepland, Open of Afgerond, bij een open assessment met de deadline. Staat in een afgerond assessment een student in ffwd nog niet op `completed`, dan meldt de rij dat en kleurt die student oranje.
+  - Studenten zijn links naar hun studentpagina. Onbekende namen worden "Student n", net als in de aside. Docenten staan onder elkaar, de eigenaar vetgedrukt en vooraan.
+  - Per studiejaar (1 september t/m 31 augustus), elk met een kopregel die je open- en dichtklapt, met het aantal assessments en hoeveel studenten niet afgerond zijn. Het huidige studiejaar staat standaard open; welke jaren open staan wordt onthouden.
+  - Bovenaan de schakelaar en **Vernieuw**; daaronder een eigen regel met zoeken, filters en het aantal. Niets verspringt als je iets aanklikt: een actief filter krijgt een getal op de hoek, **Wis filters** houdt zijn plek.
+  - Filters naast het zoekveld: uitklapmenu's **Soort**, **Status** (Gepland, Open, Afgerond, Student niet afgerond) en **Docent**, met vinkjes en per optie het aantal assessments, en de knop **Alleen van mij** (jij bent eigenaar). In een menu vink je meer opties aan; één ervan is genoeg. Tussen filters moet alles kloppen. Klik ernaast of druk op Esc om een menu te sluiten. De filters worden onthouden; **Wis filters** zet ze terug.
+  - Zoeken op titel, context, soort, student, studentnummer of docent; elk woord moet passen. Tijdens het zoeken, en bij een filter op soort, status of docent, staan alle jaren met een treffer open. **Alleen van mij** klapt niets open. Sorteren door op een kolomkop te klikken; dat gebeurt binnen elk studiejaar.
+  - De blokken van ffwd blijven staan en worden alleen verborgen.
 - **EC-overzicht**: een menu-item in de zijbalk van ffwd. Het opent een tabel met de behaalde EC van al je studenten:
   - het totaal, met een balk die de voortgang naar 240 EC laat zien;
   - EC per competentie;
@@ -63,6 +72,8 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 | `extensie/statuskaart.css` | stijl van de statuskaart |
 | `extensie/assessment-aside.js` | knop en paneel op de assessmentpagina; de kaart komt uit statuskaart.js |
 | `extensie/assessment-aside.css` | stijl van het paneel |
+| `extensie/assessmentlijst.js` | schakelaar blokken/rijen en de rijen op `/sessions`; status, zoeken en sorteren zijn los te testen |
+| `extensie/assessmentlijst.css` | stijl van de rijen |
 | `extensie/ec-overzicht.js` | menu-item, paneel en berekening van het EC-overzicht |
 | `extensie/ec-overzicht.css` | eigen stijl van het paneel; werkt zonder andere extensies |
 | `sandbox/` | nagemaakte studentpagina, lijst met assessments en assessmentpagina, met nep-API en verzonnen testdata |

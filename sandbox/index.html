@@ -5,12 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ffwd addon sandbox</title>
 <!-- Sandbox: nagemaakte ffwd-pagina's (zelfde opbouw en Tailwind-classes als app.ffwd.school, 13-10-2026) met een nep-API:
-     een studentpagina, de lijst met assessments en een assessmentpagina. Laadt dezelfde bestanden als de extensie.
+     een studentpagina, de lijst met assessments (opbouw van /sessions, 13-10-2026) en een assessmentpagina. Laadt dezelfde bestanden als de extensie.
      Alleen verzonnen data; openen als lokaal bestand. -->
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <link rel="stylesheet" href="../extensie/ec-overzicht.css">
 <link rel="stylesheet" href="../extensie/statuskaart.css">
 <link rel="stylesheet" href="../extensie/assessment-aside.css">
+<link rel="stylesheet" href="../extensie/assessmentlijst.css">
 <style>
   /* Wat ffwd zelf in zijn eigen CSS heeft (geen Tailwind): menu-items en de labels bovenaan */
   a.light { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; color: #374151; }
@@ -51,6 +52,17 @@
   const F = FfwdFixtures;
   const wacht = ms => new Promise(r => setTimeout(r, ms));
   const studentVan = id => F.studenten.find(s => s.id === id);
+  const komend = a => new Date(a.startingAt) > new Date();
+  // Een verzonnen assessment zoals de API van ffwd het teruggeeft
+  const sessieVoorApi = a => ({
+    id: a.id, title: a.title, kind: a.kind, context: a.context, state: a.finalized ? 'finalized' : 'open', finalized: a.finalized,
+    owned: a.docenten[0] === 'd-jij', // eigenaar = eerste docent; d-jij is de ingelogde docent
+    startingAt: a.startingAt, deadlineAt: a.deadlineAt,
+    students: a.studenten.map(studentVan).map(({ id, name, studentId }) => ({ id, name, studentId })),
+    teachers: a.docenten.map(id => F.docenten.find(d => d.id === id)),
+    assessors: a.docenten.map((id, i) => ({ id: 'as-' + id, role: i ? 'member' : 'owner', teacherId: id })),
+    assessees: a.studenten.map(id => ({ id: 'ae-' + id, status: a.pending.includes(id) ? 'pending' : 'completed', student: { id } })),
+  });
   window.fetch = async (url, opties) => {
     const { query, variables } = JSON.parse(opties.body);
     await wacht(document.getElementById('traag').checked ? 2000 : 150);
@@ -63,7 +75,13 @@
       id: 'g' + i, title: g, students: F.studenten.filter(s => s.groep === g).map(({ id, name, studentId }) => ({ id, name, studentId })),
     }));
     if (/\bstudentResults\b/.test(query)) data.studentResults = { goals: student?.doelen || [] };
-    if (/\bpastSessions\b/.test(query)) data.pastSessions = (student?.sessies || []).map((title, i) => ({ title, startingAt: `2026-0${i + 1}-15T10:00:00Z` }));
+    // Met studentId: de assessments van die student; zonder: de lijst van de ingelogde docent (komend en afgerond)
+    if (variables?.id) {
+      if (/\bpastSessions\b/.test(query)) data.pastSessions = (student?.sessies || []).map((title, i) => ({ title, startingAt: `2026-0${i + 1}-15T10:00:00Z` }));
+    } else {
+      if (/\bupcomingSessions\b/.test(query)) data.upcomingSessions = F.assessments.filter(komend).map(sessieVoorApi);
+      if (/\bpastSessions\b/.test(query)) data.pastSessions = F.assessments.filter(a => !komend(a)).map(sessieVoorApi);
+    }
     if (/\bsession\s*\(/.test(query)) {
       const a = F.assessments.find(x => x.id === variables?.id);
       data.session = a && { id: a.id, title: a.title, students: a.studenten.map(studentVan).map(({ id, name, studentId }) => ({ id, name, studentId })) };
@@ -122,7 +140,7 @@
       </aside>
       <section class="p-4 md:p-14 md:ml-60 md:min-h-screen md:bg-gray-100">
         <h2 class="first-letter:uppercase mb-4 text-xl md:mt-4 md:mb-14 md:text-4xl">${s ? 'Studenten' : 'Assessments'}</h2>
-        <div class="max-w-2xl"><div class="mt-6">${s ? studentInhoud(s) : assessmentLijst()}</div></div>
+        ${s ? `<div class="max-w-2xl"><div class="mt-6">${studentInhoud(s)}</div></div>` : assessmentLijst()}
       </section>
     </div>`;
   }
@@ -148,11 +166,21 @@
       </div>`;
   }
 
+  // Zoals ffwd: een link voor een nieuw assessment, dan de komende en de afgeronde assessments als blokken.
+  // De extensie zet haar schakelaar en rijen vóór div.space-y-6.
   function assessmentLijst() {
-    return `<p class="mb-4 text-sm text-gray-500">Geen studentpagina en geen assessment: hier hoort geen kaart en geen aside.</p>
-      <div class="grid gap-2 md:grid-cols-2">${F.assessments.map(a => `<div class="flex flex-col p-4 bg-white rounded-md border border-gray-200">
-        <h2 class="text-xl">${a.title}</h2><h3 class="text-sm text-gray-500">${a.soort}</h3>
-        <p class="mt-4 text-right"><a href="#" class="text-sky-500" data-pad="/sessions/${a.id}">Bekijk</a></p></div>`).join('')}</div>`;
+    const fmt = d => new Date(d).toLocaleDateString('nl-NL');
+    const blok = a => `<div class="flex flex-col p-4 bg-white rounded-md border border-gray-200">
+      <h2 class="text-xl">${a.title}</h2><h3 class="text-sm text-gray-500">${a.soort}</h3>
+      <div class="my-4"><dl class="grid grid-cols-3 text-sm"><dt class="overflow-hidden whitespace-nowrap text-ellipsis">Datum:</dt><dd class="col-span-2">${fmt(a.startingAt)}</dd></dl></div>
+      <p class="mt-auto text-right"><a href="#" class="text-sky-500" data-pad="/sessions/${a.id}">Bekijk</a></p></div>`;
+    const kop = t => `<h2 class="mb-2 text-sm font-bold flex"><span>${t}</span></h2>`;
+    const komende = F.assessments.filter(komend), afgerond = F.assessments.filter(a => !komend(a));
+    return `<p class="mb-6"><a href="#" class="default"><span>+ Nieuw assessment</span></a></p>
+      <div class="space-y-6 max-w-4xl">
+        ${komende.length ? kop('Komende assessments') : ''}<div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">${komende.map(blok).join('')}</div>
+        ${kop('Afgeronde assessments')}<div class="grid gap-2 md:grid-cols-2 lg:grid-cols-3">${afgerond.map(blok).join('')}</div>
+      </div>`;
   }
 
   // Assessmentpagina: vaste balk bovenin, kop met gegevens, tabel met een rij per student, feedback (opbouw van ffwd)
@@ -215,5 +243,6 @@
 <script src="../extensie/ec-overzicht.js"></script>
 <script src="../extensie/statuskaart.js"></script>
 <script src="../extensie/assessment-aside.js"></script>
+<script src="../extensie/assessmentlijst.js"></script>
 </body>
 </html>

@@ -1,0 +1,130 @@
+/* Assessment list (assessmentlijst.js): a switch between ffwd's blocks and rows on /sessions.
+   #ffl-lijst sits directly before ffwd's container with the blocks. In rows mode CSS hides that container,
+   so ffwd's own blocks stay untouched. The table follows ffwd's own tables (assessment page):
+   white, grey border, grey header with small text. */
+
+:root {
+  --ffl-inkt: #111827; --ffl-zacht: #6b7280; --ffl-lijn: #e5e7eb; --ffl-kop: #f3f4f6;
+  --ffl-open: #0284c7; --ffl-open-licht: #f0f9ff;
+  --ffl-klaar: #047857; --ffl-klaar-licht: #ecfdf5;
+  --ffl-let-op: #b45309; --ffl-let-op-licht: #fffbeb;
+}
+
+html[data-ffl-weergave="rijen"] #ffl-lijst ~ div.space-y-6 { display: none; }
+html[data-ffl-weergave="blokken"] #ffl-lijst .ffl-alleen-rijen { display: none; }
+
+#ffl-lijst { margin-bottom: 24px; color: var(--ffl-inkt); }
+
+/* ---------- Bar: switch, search, count, refresh ---------- */
+#ffl-lijst .ffl-balk { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+#ffl-lijst .ffl-schakel { display: inline-flex; padding: 2px; background: #fff; border: 1px solid var(--ffl-lijn); border-radius: 8px; }
+#ffl-lijst .ffl-schakel button { padding: 4px 12px; border: 0; border-radius: 6px; background: none; color: #374151; font-size: 13px; cursor: pointer; }
+#ffl-lijst .ffl-schakel button[aria-pressed="true"] { background: var(--ffl-inkt); color: #fff; }
+#ffl-lijst .ffl-zoekbalk { gap: 8px; }
+#ffl-lijst .ffl-zoek {
+  flex: 0 1 280px; min-width: 180px; padding: 5px 10px; border: 1px solid var(--ffl-lijn); border-radius: 6px;
+  background: #fff; font-size: 14px; color: var(--ffl-inkt);
+}
+#ffl-lijst .ffl-aantal { margin-left: auto; font-size: 13px; color: var(--ffl-zacht); white-space: nowrap; font-variant-numeric: tabular-nums; }
+#ffl-lijst .ffl-knop {
+  margin-left: auto; padding: 4px 10px; border: 1px solid var(--ffl-lijn); border-radius: 6px;
+  background: #fff; color: #374151; font-size: 13px; cursor: pointer;
+}
+#ffl-lijst .ffl-knop:hover, #ffl-lijst .ffl-schakel button:not([aria-pressed="true"]):hover { background: var(--ffl-kop); }
+#ffl-lijst button:focus-visible, #ffl-lijst a:focus-visible, #ffl-lijst .ffl-zoek:focus-visible { outline: 2px solid var(--ffl-open); outline-offset: 2px; }
+
+/* ---------- Filters: a dropdown per filter (<details>) with checkboxes, a toggle, and a reset link ---------- */
+#ffl-lijst .ffl-filters { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#ffl-lijst .ffl-dropdown { position: relative; }
+#ffl-lijst .ffl-dropdown summary, #ffl-lijst .ffl-filter {
+  display: flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--ffl-lijn); border-radius: 6px;
+  background: #fff; color: #374151; font-size: 13px; line-height: 1.2; cursor: pointer; list-style: none; user-select: none;
+}
+#ffl-lijst .ffl-dropdown summary::-webkit-details-marker { display: none; }
+#ffl-lijst .ffl-dropdown summary::after { content: "▾"; font-size: 11px; color: var(--ffl-zacht); }
+/* Count as a badge on the corner: positioned, so the button keeps its width */
+#ffl-lijst .ffl-dropdown summary { position: relative; }
+#ffl-lijst .ffl-teller {
+  position: absolute; top: -7px; right: -7px; min-width: 16px; padding: 0 4px; border-radius: 9999px;
+  background: var(--ffl-open); color: #fff; box-shadow: 0 0 0 2px #f3f4f6;
+  font-size: 10px; font-weight: 700; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums;
+}
+#ffl-lijst .ffl-dropdown summary:hover, #ffl-lijst .ffl-filter:hover { background: var(--ffl-kop); }
+#ffl-lijst .ffl-dropdown.ffl-actief summary, #ffl-lijst .ffl-filter[aria-pressed="true"] { background: var(--ffl-inkt); border-color: var(--ffl-inkt); color: #fff; }
+#ffl-lijst .ffl-dropdown.ffl-actief summary::after { color: #fff; }
+#ffl-lijst .ffl-dropdown summary:focus-visible { outline: 2px solid var(--ffl-open); outline-offset: 2px; }
+
+#ffl-lijst .ffl-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 40; min-width: 220px; max-height: 320px; overflow-y: auto;
+  padding: 4px; background: #fff; border: 1px solid var(--ffl-lijn); border-radius: 8px; box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+#ffl-lijst .ffl-optie { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+#ffl-lijst .ffl-optie:hover { background: var(--ffl-kop); }
+#ffl-lijst .ffl-optie input { accent-color: var(--ffl-inkt); }
+#ffl-lijst .ffl-optie-tekst { flex: 1; white-space: nowrap; }
+#ffl-lijst .ffl-optie-aantal { font-size: 12px; color: var(--ffl-zacht); font-variant-numeric: tabular-nums; }
+#ffl-lijst .ffl-optie.ffl-let-op .ffl-optie-tekst { color: var(--ffl-let-op); }
+
+/* Hidden keeps its place (visibility), so nothing shifts when the first filter is switched on */
+#ffl-lijst .ffl-wis[hidden] { display: inline; visibility: hidden; }
+#ffl-lijst .ffl-wis { padding: 0 4px; border: 0; background: none; color: var(--ffl-open); font-size: 13px; text-decoration: underline; cursor: pointer; }
+
+#ffl-lijst .ffl-melding { margin: 0; font-size: 14px; color: var(--ffl-zacht); }
+#ffl-lijst .ffl-fout { color: var(--ffl-let-op); }
+
+/* ---------- Table ---------- */
+#ffl-lijst .ffl-rand { overflow-x: auto; background: #fff; border: 1px solid var(--ffl-lijn); }
+#ffl-lijst .ffl-tabel { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 14px; }
+#ffl-lijst th {
+  padding: 0; background: var(--ffl-kop); border-bottom: 1px solid var(--ffl-lijn);
+  text-align: left; font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+#ffl-lijst th button { width: 100%; padding: 8px 12px; border: 0; background: none; color: inherit; font: inherit; text-align: inherit; cursor: pointer; }
+#ffl-lijst th button:hover { background: var(--ffl-lijn); }
+#ffl-lijst thead th[aria-sort] { color: var(--ffl-open); }
+#ffl-lijst td { padding: 10px 12px; border-top: 1px solid var(--ffl-lijn); vertical-align: top; }
+#ffl-lijst tbody tr:not(.ffl-jaarkop):hover { background: #f9fafb; }
+
+/* Academic year: a header row per tbody that folds the year open or closed */
+#ffl-lijst .ffl-jaarkop th { background: #fff; border-top: 1px solid var(--ffl-lijn); border-bottom: 0; font-size: 13px; }
+#ffl-lijst .ffl-jaar:first-of-type .ffl-jaarkop th { border-top: 0; }
+#ffl-lijst .ffl-jaar-open .ffl-jaarkop th { border-bottom: 1px solid var(--ffl-lijn); }
+#ffl-lijst .ffl-jaarkop button { display: flex; align-items: baseline; gap: 10px; padding: 10px 12px; }
+#ffl-lijst .ffl-jaarkop button:disabled { cursor: default; }
+#ffl-lijst .ffl-jaarkop button:disabled:hover { background: none; }
+#ffl-lijst .ffl-pijl { display: inline-block; width: 1em; font-size: 14px; line-height: 1; text-align: center; color: var(--ffl-zacht); transition: transform .15s; }
+#ffl-lijst .ffl-jaar-open .ffl-pijl { transform: rotate(90deg); }
+#ffl-lijst .ffl-jaar-aantal { font-size: 12px; font-weight: 400; color: var(--ffl-zacht); }
+#ffl-lijst .ffl-jaar-aantal.ffl-let-op { color: var(--ffl-let-op); }
+#ffl-lijst .ffl-jaar-open .ffl-jaarkop + tr td { border-top: 0; }
+#ffl-lijst .ffl-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--ffl-zacht); }
+#ffl-lijst .ffl-let-op { color: var(--ffl-let-op); }
+
+#ffl-lijst .ffl-datum { width: 7.5em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Table cells ignore min-width; the title link is a block with its own minimum instead */
+#ffl-lijst td.ffl-titel a { display: block; min-width: 11em; }
+#ffl-lijst .ffl-titel a { color: var(--ffl-inkt); font-weight: 600; text-decoration: none; }
+#ffl-lijst .ffl-titel a:hover { color: var(--ffl-open); text-decoration: underline; }
+#ffl-lijst .ffl-soort { width: 7em; white-space: nowrap; }
+#ffl-lijst .ffl-status { width: 8.5em; }
+
+/* Status label: blue = open, grey = planned, green = done */
+#ffl-lijst .ffl-label { display: inline-block; padding: 1px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+#ffl-lijst .ffl-label.ffl-open { background: var(--ffl-open-licht); color: var(--ffl-open); }
+#ffl-lijst .ffl-label.ffl-gepland { background: var(--ffl-kop); color: #374151; }
+#ffl-lijst .ffl-label.ffl-klaar { background: var(--ffl-klaar-licht); color: var(--ffl-klaar); }
+
+/* Students as small links; orange when the assessment is finalized but ffwd does not have them on 'completed' */
+#ffl-lijst .ffl-studenten { width: 22%; }
+#ffl-lijst .ffl-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+#ffl-lijst .ffl-chip {
+  max-width: 16em; padding: 1px 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border: 1px solid var(--ffl-lijn); border-radius: 9999px; font-size: 12px; color: #374151; text-decoration: none;
+}
+#ffl-lijst .ffl-chip:hover { border-color: var(--ffl-zacht); color: var(--ffl-inkt); }
+#ffl-lijst .ffl-chip-open { border-color: var(--ffl-let-op); background: var(--ffl-let-op-licht); color: var(--ffl-let-op); }
+
+/* Teachers one per line, the owner first and bold */
+#ffl-lijst .ffl-docenten { font-size: 13px; }
+#ffl-lijst .ffl-docent { display: block; }
+#ffl-lijst .ffl-eigenaar { font-weight: 600; }

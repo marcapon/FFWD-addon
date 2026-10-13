@@ -57,13 +57,38 @@ const FfwdFixtures = (() => {
       sessies: [], doelen: [] },
   ];
 
-  // Verzonnen assessments (ffwd `session`): een integraal assessment met drie studenten en een individueel
-  const assessments = [
-    { id: 'a-integraal', title: 'Integraal assessment jaar 2', soort: 'Integraal assessment', studenten: ['s-daan', 's-noor', 's-onbekend'] },
-    { id: 'a-jesse', title: 'Eindassessment Jesse', soort: 'Individueel assessment', studenten: ['s-jesse'] },
+  // Verzonnen docenten; d-jij is de ingelogde docent in de sandbox
+  const docenten = [
+    { id: 'd-jij', name: 'Docent (verzonnen)', initials: 'DV' },
+    { id: 'd-eva', name: 'Eva Smit', initials: 'ES' },
+    { id: 'd-tom', name: 'Tom Peters', initials: 'TP' },
+    { id: 'd-lisa', name: '', initials: 'LK' },
   ];
 
-  return { competenties, programmas, studenten, assessments, r, propedeuseVol, hoofdfaseVol, stageVol, afstuderenVol };
+  // Verzonnen assessments (ffwd `session`). kind, context, datums en finalized zoals in ffwd;
+  // docenten: de eerste is de eigenaar (role owner), de rest member. pending: studenten die niet op 'completed' staan.
+  const assessments = [
+    { id: 'a-integraal', title: 'Integraal assessment jaar 2', soort: 'Integraal assessment', kind: 'integral', context: 'Hoofdfase jaar 2',
+      startingAt: '2026-10-20T09:00:00Z', deadlineAt: '2026-10-27T16:00:00Z', finalized: false,
+      studenten: ['s-daan', 's-noor', 's-onbekend'], docenten: ['d-jij', 'd-eva'], pending: ['s-daan', 's-noor', 's-onbekend'] },
+    { id: 'a-jesse', title: 'Eindassessment Jesse', soort: 'Individueel assessment', kind: 'individual', context: null,
+      startingAt: '2026-10-08T13:30:00Z', deadlineAt: '2026-10-10T16:00:00Z', finalized: false,
+      studenten: ['s-jesse'], docenten: ['d-eva', 'd-jij'], pending: ['s-jesse'] },
+    { id: 'a-stage', title: 'Stage-assessment', soort: 'Stage-assessment', kind: 'internship', context: 'Stage voorjaar',
+      startingAt: '2026-06-18T10:00:00Z', deadlineAt: '2026-06-25T16:00:00Z', finalized: true,
+      studenten: ['s-mila', 's-femke'], docenten: ['d-jij', 'd-tom', 'd-lisa'], pending: ['s-femke'] },
+    { id: 'a-blok4', title: 'Assessment blok 4', soort: 'Integraal assessment', kind: 'integral', context: 'Propedeuse preminor',
+      startingAt: '2026-04-09T08:30:00Z', deadlineAt: '2026-04-16T16:00:00Z', finalized: true,
+      studenten: ['s-sanne', 's-daan', 's-femke', 's-jesse', 's-onbekend'], docenten: ['d-tom', 'd-jij', 'd-eva', 'd-lisa'], pending: [] },
+    { id: 'a-minor', title: 'Minor Game Design eindpresentatie', soort: 'Individueel assessment', kind: 'individual', context: 'Minor Game Design',
+      startingAt: '2026-01-22T14:00:00Z', deadlineAt: '2026-01-29T16:00:00Z', finalized: true,
+      studenten: ['s-noor'], docenten: ['d-jij'], pending: [] },
+    { id: 'a-jaar1', title: 'Assessment blok 1', soort: 'Individueel assessment', kind: 'individual', context: 'Propedeuse',
+      startingAt: '2025-06-26T09:00:00Z', deadlineAt: '2025-07-03T16:00:00Z', finalized: true,
+      studenten: ['s-daan'], docenten: ['d-tom', 'd-jij'], pending: [] },
+  ];
+
+  return { competenties, programmas, studenten, docenten, assessments, r, propedeuseVol, hoofdfaseVol, stageVol, afstuderenVol };
 })();
 
 if (typeof module === 'object') module.exports = FfwdFixtures;
