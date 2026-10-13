@@ -1,6 +1,11 @@
 # ffwd addon
 
-Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.ffwd.school/), het feedback- en assessmentplatform van de opleiding. Alleen voor eigen gebruik.
+Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.ffwd.school/), het feedback- en assessmentplatform van de opleiding. Gemaakt voor docenten van de opleiding; collega's mogen hem vrij gebruiken en aanpassen (MIT-licentie).
+
+> **Goed om te weten**
+> - Dit is geen officieel product van ffwd of van de school. De extensie gebruikt de interne API van ffwd, die zonder aankondiging kan veranderen. Werkt iets niet meer, meld het dan.
+> - De extensie **leest alleen**, met je eigen inlog in ffwd. Ze verstuurt niets naar andere diensten; je ziet alleen wat je in ffwd ook mag zien.
+> - De rekenregels van de statuskaart (fases, 54 EC voor de Hoofdfase, cum laude) gelden voor onze opleiding. Bij een andere opleiding kloppen ze waarschijnlijk niet.
 
 ## Functies
 - **Statuskaart** op elke studentpagina (`/students/:id`), tussen de metadata en de afgeronde assessments:
@@ -29,10 +34,23 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
   Je kunt filteren per groep en sorteren op elke kolom. Klik je op een naam, dan opent de studentpagina in ffwd.
 
 ## Installeren
-1. Ga in Chrome naar `chrome://extensions`.
-2. Zet rechtsboven **Developer mode** aan.
-3. Kies **Load unpacked** en daarna de map `extensie`.
-4. Na een wijziging: klik bij de extensie op ↻ en herlaad ffwd.
+Werkt in Chrome en andere Chromium-browsers (Edge, Brave, Arc).
+
+**Met een zip (zonder git)**
+1. Download `ffwd-addon-vX.Y.Z.zip` bij de nieuwste [release](../../releases/latest) en pak hem uit op een vaste plek, bijvoorbeeld in Documenten. Gooi de map daarna niet weg: Chrome laadt de extensie uit die map.
+2. Ga in Chrome naar `chrome://extensions` en zet rechtsboven **Developer mode** aan.
+3. Kies **Load unpacked** en daarna de uitgepakte map `ffwd-addon`.
+4. Open of herlaad ffwd.
+
+**Met git**
+1. `git clone` deze repository.
+2. Laad in `chrome://extensions` (met **Developer mode** aan) via **Load unpacked** de map `extensie`.
+
+## Bijwerken
+- **Zip:** download de nieuwe zip, pak hem uit over de oude map (of vervang de map) en klik in `chrome://extensions` bij de extensie op ↻. Herlaad daarna ffwd.
+- **Git:** `git pull`, dan ↻ bij de extensie en ffwd herladen.
+
+Je instellingen (cum laude per student, blokken of rijen, filters) blijven bewaard, zolang je de extensie niet verwijdert.
 
 ## Rekenregels van de statuskaart
 - Alleen resultaten van afgeronde assessments tellen.
@@ -59,13 +77,15 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 ## Hoe het werkt
 - Een content script draait op `https://app.ffwd.school/*`.
 - Het leest de GraphQL-API op `https://api.ffwd.school/api`, met de inlog van de gebruiker (`credentials: 'include'`).
-- **Alleen lezen.** De extensie slaat niets op en verstuurt niets.
+- **Alleen lezen.** De extensie schrijft niets naar ffwd en verstuurt niets naar andere diensten.
+- Lokaal, alleen in je eigen browser (`chrome.storage.local`), onthoudt ze je instellingen: cum laude per student, open of dicht, blokken of rijen, open studiejaren en filters. Geen studentgegevens.
 - De API is niet officieel en kan zonder aankondiging veranderen.
 
 ## Bestanden
 | Bestand | Inhoud |
 | --- | --- |
 | `extensie/manifest.json` | laadt de scripts en de stijlen op app.ffwd.school |
+| `extensie/icons/` | icoon: `icon.svg` is de bron, de PNG's (16–128 px) zijn eruit gemaakt |
 | `extensie/gedeeld.js` | gedeeld: de GraphQL-aanroep `vraag()`, de helper `el()` en lokaal onthouden (`lees()`, `bewaar()`) |
 | `extensie/status.js` | rekenregels van de statuskaart; puur, zonder DOM of netwerk |
 | `extensie/statuskaart.js` | herkent de studentpagina, plaatst de kaart en tekent hem |
@@ -82,3 +102,11 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
 ## Regels
 - Studentgegevens blijven lokaal. Ze komen niet in deze repository: ook niet als voorbeelddata, export of testbestand. De sandbox en de tests gebruiken alleen verzonnen studenten.
 - De API kan ook schrijven. Dat gebruiken we alleen na een expliciet besluit.
+
+## Een release maken
+1. Verhoog `version` in `extensie/manifest.json` en laat `node --test` slagen.
+2. Maak de zip met `./release.sh`. Die draait de tests en zet `dist/ffwd-addon-vX.Y.Z.zip` klaar, met daarin de map `ffwd-addon` (de inhoud van `extensie/`).
+3. Maak op GitHub een release met tag `vX.Y.Z` en voeg de zip toe.
+
+## Licentie
+[MIT](LICENSE): vrij te gebruiken, aan te passen en te delen, zonder garantie.

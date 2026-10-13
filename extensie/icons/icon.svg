@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- ffwd addon: two fast-forward triangles on the blue of the EC button (#0284c7). Source of icon16–128.png -->
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="#0284c7"/>
+  <g fill="#fff" stroke="#fff" stroke-width="8" stroke-linejoin="round">
+    <path d="M30 40 L62 64 L30 88 Z"/>
+    <path d="M64 40 L96 64 L64 88 Z"/>
+  </g>
+</svg>

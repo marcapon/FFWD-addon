@@ -9,3 +9,6 @@
 !extensie/manifest.json
 data/
 export/
+
+# Release zips (release.sh)
+dist/

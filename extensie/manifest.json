@@ -1,8 +1,14 @@
 {
   "manifest_version": 3,
   "name": "ffwd addon",
-  "version": "0.4.0",
-  "description": "Extra functions inside app.ffwd.school: a progress card on each student page and next to each assessment, the assessment list as rows, and an EC overview of all students. Personal use only.",
+  "version": "1.0.0",
+  "description": "Extra functions inside app.ffwd.school: a progress card on each student page and next to each assessment, the assessment list as rows, and an EC overview of all students. Reads only; nothing is stored or sent elsewhere.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "permissions": [
     "storage"
   ],
