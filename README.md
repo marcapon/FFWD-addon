@@ -46,16 +46,22 @@ Werkt in Chrome en andere Chromium-browsers (Edge, Brave, Arc), en in Firefox en
 1. `git clone` deze repository.
 2. Laad in `chrome://extensions` (met **Developer mode** aan) via **Load unpacked** de map `extensie`.
 
+**Firefox of Zen**
+1. Download `ffwd-addon-vX.Y.Z.xpi` bij de nieuwste [release](../../releases/latest). Deze versie is ondertekend door Mozilla.
+2. Sleep het bestand naar een venster van Firefox of Zen, of kies in `about:addons` bij het tandwiel **Install Add-on From File…**.
+3. Bevestig met **Add** en herlaad ffwd.
+
 **Firefox of Zen (tijdelijk, om te testen)**
 1. Ga naar `about:debugging#/runtime/this-firefox`.
 2. Kies **Load Temporary Add-on…** en daarna `manifest.json` in de map `extensie` (of in de uitgepakte zip).
 3. Open of herlaad ffwd.
 
-Een tijdelijke extensie is weg na een herstart van de browser. Blijvend installeren kan alleen met een versie die Mozilla heeft ondertekend.
+Een tijdelijke extensie is weg na een herstart van de browser.
 
 ## Bijwerken
 - **Zip:** download de nieuwe zip, pak hem uit over de oude map (of vervang de map) en klik in `chrome://extensions` bij de extensie op ↻. Herlaad daarna ffwd.
 - **Git:** `git pull`, dan ↻ bij de extensie en ffwd herladen.
+- **Firefox of Zen:** installeer de nieuwe `.xpi` op dezelfde manier; hij vervangt de oude versie.
 
 Je instellingen (cum laude per student, blokken of rijen, filters) blijven bewaard, zolang je de extensie niet verwijdert.
 
