@@ -132,8 +132,7 @@ function naarStudent(e, id) {
   if (e.metaKey || e.ctrlKey || e.shiftKey) return;
   e.preventDefault();
   sluitPaneel();
-  history.pushState({}, '', '/students/' + id);
-  dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+  naarPad('/students/' + id);
 }
 
 // ---------- Menu-item in de zijbalk ----------

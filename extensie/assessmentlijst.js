@@ -341,8 +341,7 @@ if (typeof document !== 'undefined') (() => {
   function naar(e, pad) {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
     e.preventDefault();
-    history.pushState({}, '', pad);
-    dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+    naarPad(pad);
   }
 
   // ---------- Starten ----------
