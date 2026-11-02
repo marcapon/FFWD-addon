@@ -1,5 +1,7 @@
 #!/bin/sh
-# Zet de zip voor een release klaar: dist/ffwd-addon-v<versie>.zip met daarin de map ffwd-addon (= extensie/).
+# Zet de zips voor een release klaar:
+# - dist/ffwd-addon-v<versie>.zip: met daarin de map ffwd-addon (= extensie/), om uit te pakken voor Chrome;
+# - dist/ffwd-addon-v<versie>-firefox.zip: dezelfde bestanden met manifest.json bovenin, om te laten ondertekenen bij addons.mozilla.org.
 # Draait eerst de tests. Uploaden naar GitHub doe je daarna zelf (of met: gh release create v<versie> dist/…zip).
 set -e
 cd "$(dirname "$0")"
@@ -11,6 +13,8 @@ cp -R extensie/. "$tmp/ffwd-addon/"
 find "$tmp" -name '.DS_Store' -delete
 mkdir -p dist
 rm -f "dist/ffwd-addon-v$versie.zip"
+rm -f "dist/ffwd-addon-v$versie-firefox.zip"
 (cd "$tmp" && zip -qr - ffwd-addon) > "dist/ffwd-addon-v$versie.zip"
+(cd "$tmp/ffwd-addon" && zip -qr - .) > "dist/ffwd-addon-v$versie-firefox.zip"
 rm -rf "$tmp"
-echo "Klaar: dist/ffwd-addon-v$versie.zip"
+echo "Klaar: dist/ffwd-addon-v$versie.zip en dist/ffwd-addon-v$versie-firefox.zip"
