@@ -1,6 +1,6 @@
 # ffwd addon
 
-Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.ffwd.school/), het feedback- en assessmentplatform van de opleiding. Gemaakt voor docenten van de opleiding; collega's mogen hem vrij gebruiken en aanpassen (MIT-licentie).
+Een browserextensie (Manifest V3) voor Chrome en Firefox die functies toevoegt aan [ffwd](https://app.ffwd.school/), het feedback- en assessmentplatform van de opleiding. Gemaakt voor docenten van de opleiding; collega's mogen hem vrij gebruiken en aanpassen (MIT-licentie).
 
 > **Goed om te weten**
 > - Dit is geen officieel product van ffwd of van de school. De extensie gebruikt de interne API van ffwd, die zonder aankondiging kan veranderen. Werkt iets niet meer, meld het dan.
@@ -34,7 +34,7 @@ Een Chrome-extensie (Manifest V3) die functies toevoegt aan [ffwd](https://app.f
   Je kunt filteren per groep en sorteren op elke kolom. Klik je op een naam, dan opent de studentpagina in ffwd.
 
 ## Installeren
-Werkt in Chrome en andere Chromium-browsers (Edge, Brave, Arc).
+Werkt in Chrome en andere Chromium-browsers (Edge, Brave, Arc), en in Firefox en Zen.
 
 **Met een zip (zonder git)**
 1. Download `ffwd-addon-vX.Y.Z.zip` bij de nieuwste [release](../../releases/latest) en pak hem uit op een vaste plek, bijvoorbeeld in Documenten. Gooi de map daarna niet weg: Chrome laadt de extensie uit die map.
@@ -45,6 +45,13 @@ Werkt in Chrome en andere Chromium-browsers (Edge, Brave, Arc).
 **Met git**
 1. `git clone` deze repository.
 2. Laad in `chrome://extensions` (met **Developer mode** aan) via **Load unpacked** de map `extensie`.
+
+**Firefox of Zen (tijdelijk, om te testen)**
+1. Ga naar `about:debugging#/runtime/this-firefox`.
+2. Kies **Load Temporary Add-on…** en daarna `manifest.json` in de map `extensie` (of in de uitgepakte zip).
+3. Open of herlaad ffwd.
+
+Een tijdelijke extensie is weg na een herstart van de browser. Blijvend installeren kan alleen met een versie die Mozilla heeft ondertekend.
 
 ## Bijwerken
 - **Zip:** download de nieuwe zip, pak hem uit over de oude map (of vervang de map) en klik in `chrome://extensions` bij de extensie op ↻. Herlaad daarna ffwd.

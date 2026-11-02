@@ -3,14 +3,12 @@
 
 const API = 'https://api.ffwd.school/api';
 
-// In Firefox gaat een fetch uit een content script als de extensie; content.fetch gaat als de pagina, net als in Chrome.
-// cloneInto bestaat alleen in content scripts van Firefox. Op aanroep opgezocht, zodat de nep-API van de sandbox werkt.
+// cloneInto bestaat alleen in content scripts van Firefox (en Zen).
 const IN_FIREFOX = typeof cloneInto === 'function';
-const paginaFetch = (...args) => (IN_FIREFOX ? content.fetch(...args) : fetch(...args));
 
 // Alleen lezen: queries die ffwd zelf ook stelt, met de inlog van de gebruiker
 async function vraag(query, variables) {
-  const r = await paginaFetch(API, {
+  const r = await fetch(API, {
     method: 'POST', credentials: 'include',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ query, variables }),
