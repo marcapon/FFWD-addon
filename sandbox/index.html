@@ -67,7 +67,7 @@
   window.fetch = async (url, opties) => {
     const { query, variables } = JSON.parse(opties.body);
     await wacht(document.getElementById('traag').checked ? 2000 : 150);
-    if (document.getElementById('fout').checked) return { json: async () => ({ errors: [{ message: 'gesimuleerde API-fout' }] }) };
+    if (document.getElementById('fout').checked) return { ok: true, status: 200, json: async () => ({ errors: [{ message: 'gesimuleerde API-fout' }] }) };
     const student = studentVan(variables?.id);
     const data = {};
     if (/\bcompetencies\b/.test(query)) data.competencies = F.competenties;
@@ -91,7 +91,7 @@
       // De leerdoelen van dit assessment (voor 'Alleen van dit assessment' in de feedbackexport)
       if (data.session) data.session.goals = F.feedbackSessies.find(x => x.id === a.id)?.goals || [];
     }
-    return { json: async () => ({ data }) };
+    return { ok: true, status: 200, json: async () => ({ data }) };
   };
 
   // ---------- Nagemaakte router: een lokaal bestand heeft geen /students/…-pad ----------

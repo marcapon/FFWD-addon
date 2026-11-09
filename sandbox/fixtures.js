@@ -102,7 +102,9 @@ const FfwdFixtures = (() => {
   };
   const sessie = (a, doelen, algemeen = []) => ({
     id: a.id, title: a.title, kind: a.kind, context: a.context, startingAt: a.startingAt, finalized: a.finalized,
-    students: a.studenten.map(leerling), goals: doelen, posts: [...doelen.flatMap(g => g.posts), ...algemeen],
+    students: a.studenten.map(leerling), teachers: a.docenten.map(doc), goals: doelen,
+    // Zoals de extensie het vraagt: bij de posts van het assessment geen auteur (ffwd geeft die niet betrouwbaar)
+    posts: [...doelen.flatMap(g => g.posts), ...algemeen].map(({ author, ...p }) => p),
   });
   const A = id => assessments.find(a => a.id === id);
   const feedbackSessies = [

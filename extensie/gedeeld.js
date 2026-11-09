@@ -13,8 +13,11 @@ async function vraag(query, variables) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ query, variables }),
   });
-  const j = await r.json();
-  if (j.errors) throw new Error(j.errors.map(e => e.message).join('; '));
+  // Fouten komen als lijst (GraphQL), als object ({ detail } bij een serverfout) of als { msg } (niet ingelogd)
+  const j = await r.json().catch(() => ({}));
+  const fouten = Array.isArray(j.errors) ? j.errors.map(e => e?.message).filter(Boolean)
+    : j.errors ? [j.errors.detail || j.errors.message || JSON.stringify(j.errors)] : j.msg ? [j.msg] : [];
+  if (fouten.length || !r.ok || !j.data) throw new Error((fouten.join('; ') || 'geen gegevens') + (r.ok ? '' : ` (HTTP ${r.status})`));
   return j.data;
 }
 

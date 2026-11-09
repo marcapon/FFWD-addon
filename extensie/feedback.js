@@ -52,10 +52,14 @@ const FfwdFeedback = (() => {
   };
   const href = attrs => attrs.match(/href\s*=\s*("([^"]*)"|'([^']*)')/i)?.slice(2).find(v => v != null);
 
+  // Tekst zoals hij staat, met regeleinden (voor pre: in ffwd geplakte tekst, soms met code erin)
+  const letterlijk = k => typeof k === 'string' ? decodeer(k) : k.tag === 'br' ? '\n' : k.kinderen.map(letterlijk).join('');
+
   function tekst(knoop) {
     if (typeof knoop === 'string') return decodeer(knoop.replace(/\s+/g, ' '));
     const binnen = () => knoop.kinderen.map(tekst).join('');
     switch (knoop.tag) {
+      case 'pre': return '\n\n' + letterlijk(knoop).replace(/[ \t]+$/gm, '').trim() + '\n\n';
       case 'br': return '\n';
       case 'hr': return '\n\n---\n\n';
       case 'strong': case 'b': return omhul(binnen(), '**');
@@ -101,15 +105,18 @@ const FfwdFeedback = (() => {
 
   // Haalt uit de assessments van de API wat bij deze student hoort: alleen afgeronde assessments,
   // alleen de eigen leerdoelen, en de algemene feedback (posts zonder leerdoel).
+  // Een post zonder tekst (ffwd bewaart soms een lege <p></p>) telt niet als feedback
+  const heeftTekst = p => !!htmlNaarMarkdown(p?.body).trim();
+
   function verzamel(sessies, studentId) {
     const doelen = [], algemeen = [];
     for (const s of sessies || []) {
       if (!s?.finalized) continue;
       for (const g of s.goals || []) {
         if (g.student?.id !== studentId) continue;
-        doelen.push({ sessie: s, doel: g, posts: (g.posts || []).filter(p => p.body?.trim()) });
+        doelen.push({ sessie: s, doel: g, posts: (g.posts || []).filter(heeftTekst) });
       }
-      const los = (s.posts || []).filter(p => !p.goalId && !p.goal && p.body?.trim());
+      const los = (s.posts || []).filter(p => !p.goalId && !p.goal && heeftTekst(p));
       if (los.length) algemeen.push({ sessie: s, posts: los, groep: (s.students || []).length > 1 });
     }
     return { doelen, algemeen };
@@ -189,8 +196,14 @@ const FfwdFeedback = (() => {
     if (o.algemeen && algemeen.length) {
       regels.push('## Algemene feedback bij assessments', '');
       if (algemeen.some(a => a.groep)) regels.push('> Bij groepsassessments kan deze feedback ook over medestudenten gaan.', '');
+      // ffwd geeft hier de auteur niet betrouwbaar; daarom de docenten van het assessment
       for (const a of [...algemeen].sort(nieuwNaarOud)) {
-        regels.push(`#### ${kopAssessment(a.sessie)}`, '', feedback(a.posts), '');
+        const docenten = (a.sessie.teachers || []).map(t => docent(t, pseudo)).filter(n => n !== 'onbekende docent');
+        regels.push(`#### ${kopAssessment(a.sessie)}`, '', ...a.posts.flatMap(p => {
+          const wie = p.author ? docent(p.author, pseudo) : docenten.length ? 'docenten van dit assessment: ' + docenten.join(', ') : '';
+          const delen = [wie, p.insertedAt && datum(p.insertedAt)].filter(Boolean);
+          return [`**Feedback${delen.length ? ` (${delen.join(', ')})` : ''}:**`, '', md(p.body), ''];
+        }));
       }
     }
     return regels.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
@@ -213,6 +226,9 @@ if (typeof module === 'object') module.exports = FfwdFeedback;
 // De opties (leerdoelen, algemeen, pseudoniem) worden onthouden; de keuze van competenties niet.
 
 const FfwdFeedbackPaneel = typeof document === 'undefined' ? null : (() => {
+  // De auteur van een post vragen we alleen bij leerdoelen. Bij de algemene posts van een assessment
+  // (session.posts) geeft ffwd voor author soms een serverfout of null (gezien 9-11-2026), en dan mislukt
+  // de hele query. Daar noemt de export de docenten van het assessment (session.teachers).
   const VELDEN_POST = 'id goalId body insertedAt author { id name initials }';
   const perStudent = new Map(); // studentId → belofte van { competenties, sessies }, zolang de pagina open is
   const perSessie = new Map();  // sessieId → belofte van [{ student, competentie }]
@@ -223,7 +239,8 @@ const FfwdFeedbackPaneel = typeof document === 'undefined' ? null : (() => {
       pastSessions(studentId: $id) {
         id title kind context startingAt finalized
         students { id name studentId }
-        posts { ${VELDEN_POST} }
+        teachers { id name initials }
+        posts { id goalId body insertedAt }
         goals { id level description competency { id } student { id name studentId } result { amount level } posts { ${VELDEN_POST} } }
       }
     }`, { id: studentId }).then(d => ({ competenties: d.competencies || [], sessies: d.pastSessions || [] }))

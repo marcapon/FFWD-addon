@@ -50,6 +50,10 @@ test('entiteiten en witruimte', () => {
   assert.equal(md('platte tekst'), 'platte tekst');
 });
 
+test('pre houdt de regeleinden van geplakte tekst', () => {
+  assert.equal(md('<p>Zie:</p><pre><code>regel een\n  regel twee  \n\nregel &amp; drie</code></pre>'), 'Zie:\n\nregel een\nregel twee\n\nregel & drie');
+});
+
 test('kapotte HTML gaat niet mis', () => {
   assert.equal(md('<p>open <strong>vet</p><p>daarna</p>'), 'open **vet**\n\ndaarna');
   assert.equal(md('</em>los</p> 1 < 2'), 'los 1 < 2');
@@ -107,6 +111,13 @@ test('keuze van competenties', () => {
   assert.match(doc({ competenties: [] }), /Geen feedback gevonden/);
 });
 
+test('een lege post (<p></p>) telt niet als feedback', () => {
+  const sessies = F.feedbackVan('s-daan').map(s => ({ ...s, goals: s.goals.map(g => ({ ...g, posts: g.posts.map(p => ({ ...p, body: '<p></p>' })) })) }));
+  const d = bouw({ sessies, student: daan, competenties: F.competenties, vandaag: '2026-11-09' });
+  assert.ok(!d.includes('**Feedback ('));
+  assert.equal(d.split('*Geen schriftelijke feedback bij dit leerdoel.*').length - 1, 4);
+});
+
 test('leerdoelen weglaten', () => {
   assert.ok(!doc({ leerdoelen: false }).includes('**Leerdoel'));
 });
@@ -116,6 +127,9 @@ test('algemene feedback alleen als gevraagd, met een waarschuwing bij een groeps
   const d = doc({ algemeen: true });
   assert.match(d, /## Algemene feedback bij assessments\n\n> Bij groepsassessments kan deze feedback ook over medestudenten gaan\./);
   assert.ok(d.includes('Als team hebben jullie goed samengewerkt'));
+  // ffwd geeft hier geen betrouwbare auteur: de docenten van het assessment staan erbij
+  assert.match(d, /\*\*Feedback \(docenten van dit assessment: Tom Peters, Docent \(verzonnen\), Eva Smit, LK, 2026-04-16\):\*\*/);
+  assert.match(doc({ algemeen: true, pseudoniem: true }), /\*\*Feedback \(docenten van dit assessment: TP, DV, ES, LK, 2026-04-16\):\*\*/);
 });
 
 test('pseudoniem: geen naam, nummer of docentnaam; naam in de tekst vervangen', () => {
