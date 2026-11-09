@@ -60,13 +60,48 @@ const FfwdStatuskaart = (() => {
     }
   }
 
-  function kop(kaart, id, cumLaude) {
+  // Korte regel met de EC-stand, voor bovenaan de feedbackexport
+  const standTekst = st => `${st.totaal.gevuld} van ${st.totaal.vereist} EC · ` +
+    st.fases.map(f => `${f.titel} ${f.gevuld}/${f.vereist}${f.staat === 'dicht' ? ' (nog dicht)' : ''}`).join(' · ');
+
+  // De stand van een student, voor de feedbackexport in de aside (gebruikt dezelfde gegevens als de kaart)
+  async function stand(id) {
+    if (!perStudent.has(id)) perStudent.set(id, laad(id));
+    try { return standTekst(FfwdStatus.bereken(await perStudent.get(id))); } catch { return null; }
+  }
+
+  function kop(kaart, id, cumLaude, st) {
     return el('div', { class: 'st-kop' },
       el('h2', { class: 'text-sm font-bold' }, 'Studievoortgang'),
       cumLaude == null ? null : el('label', { class: 'st-schakelaar st-tip', 'data-uitleg': 'Toon de eisen en voortgang voor cum laude' },
         el('input', { type: 'checkbox', role: 'switch', checked: cumLaude, onchange: async e => { await zetCumLaude(id, e.target.checked); vul(kaart, id); } }),
         el('span', {}, 'Cum laude')),
-      el('button', { class: 'st-knop', onclick: () => { perStudent.delete(id); basis = null; vul(kaart, id); } }, 'Vernieuw'));
+      st && FfwdFeedbackPaneel ? feedbackKnop(kaart, id, st) : null,
+      el('button', { class: 'st-knop', onclick: () => { perStudent.delete(id); basis = null; FfwdFeedbackPaneel?.vergeet(id); vul(kaart, id); } }, 'Vernieuw'));
+  }
+
+  // Knop Feedback: klapt onder de kop een venster open met de feedbackexport (feedback.js).
+  // Klik ernaast of Esc sluit het venster.
+  function feedbackKnop(kaart, id, st) {
+    const knop = el('button', { type: 'button', class: 'st-knop st-feedbackknop', 'aria-expanded': 'false', 'aria-haspopup': 'dialog', onclick: () => zet(!venster()) },
+      el('span', { 'aria-hidden': 'true' }, '↓ '), 'Feedback');
+    const venster = () => kaart.querySelector(':scope > .st-feedback');
+    const sluitBuiten = e => { if (!venster()?.contains(e.target) && !knop.contains(e.target)) zet(false); };
+    const sluitEsc = e => { if (e.key === 'Escape') { e.stopPropagation(); zet(false); knop.focus(); } };
+    function zet(open) {
+      venster()?.remove();
+      document.removeEventListener('mousedown', sluitBuiten, true);
+      document.removeEventListener('keydown', sluitEsc, true);
+      knop.setAttribute('aria-expanded', String(open));
+      knop.classList.toggle('actief', open);
+      if (!open) return;
+      kaart.append(el('div', { class: 'st-feedback', role: 'dialog', 'aria-label': 'Eerdere feedback exporteren' },
+        el('h3', { class: 'fx-titel' }, 'Eerdere feedback exporteren'),
+        FfwdFeedbackPaneel.maak({ student: { id }, stand: standTekst(st) })));
+      document.addEventListener('mousedown', sluitBuiten, true);
+      document.addEventListener('keydown', sluitEsc, true);
+    }
+    return knop;
   }
 
   // ---------- Tekenen ----------
@@ -164,7 +199,7 @@ const FfwdStatuskaart = (() => {
 
     // replaceChildren zet null om in de tekst "null"; daarom lege blokken eruit filteren
     kaart.replaceChildren(...[
-      kop(kaart, id, cumLaude),
+      kop(kaart, id, cumLaude, st),
       totaal,
       fases,
       vroeg.length ? el('p', { class: 'st-klein st-let-op' }, vroeg.map(f => `${f.titel}: ${f.behaald} EC behaald terwijl de fase nog niet open was (na ${f.na.join(' en ')}).`).join(' ')) : null,
@@ -185,5 +220,5 @@ const FfwdStatuskaart = (() => {
   addEventListener('popstate', controleer);
   controleer();
 
-  return { vul };
+  return { vul, stand };
 })();

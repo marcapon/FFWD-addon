@@ -92,12 +92,28 @@ if (typeof document !== 'undefined') (() => {
         studenten.map((s, i) => el('button', { type: 'button', role: 'tab', class: 'ffa-tab', 'data-student': s.id, onclick: () => kies(s.id) },
           FfwdAside.labelVoor(s, i))))
         : el('p', { class: 'ffa-naam' }, FfwdAside.labelVoor(studenten[0], 0));
+      // Feedbackexport (feedback.js) onder de kaart, ingeklapt tot je hem nodig hebt; open of dicht wordt onthouden
+      const export_ = FfwdFeedbackPaneel ? el('details', { class: 'ffa-feedback', open: !!(await lees('aside:feedback')),
+        ontoggle: e => { bewaar('aside:feedback', e.target.open ? true : null); if (e.target.open) vulExport(); } },
+        el('summary', {}, 'Eerdere feedback exporteren')) : null;
+      let exportVoor = null; // studentId waarvoor het exportpaneel gevuld is
+      async function vulExport() {
+        const id = huidig;
+        if (!export_?.open || exportVoor === id) return;
+        exportVoor = id;
+        const s = studenten.find(x => x.id === id);
+        const paneel = FfwdFeedbackPaneel.maak({ student: { id, name: s?.name, studentId: s?.studentId }, sessieId, stand: await FfwdStatuskaart.stand(id) });
+        if (huidig === id) export_.replaceChildren(export_.firstChild, paneel);
+      }
+      let huidig = null;
       const kies = id => {
+        huidig = id;
         tabs.querySelectorAll?.('.ffa-tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.student === id)));
         bewaar('aside:student:' + sessieId, id);
         FfwdStatuskaart.vul(kaart, id);
+        vulExport();
       };
-      a.replaceChildren(kop(), tabs, kaart);
+      a.replaceChildren(...[kop(), tabs, kaart, export_].filter(Boolean));
       kies(studenten.some(s => s.id === bewaard) ? bewaard : studenten[0].id);
     } catch (e) {
       a.replaceChildren(kop(), el('p', { class: 'ffa-melding ffa-fout' }, 'Laden lukte niet: ' + e.message));

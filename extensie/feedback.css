@@ -1,0 +1,61 @@
+/* Feedbackexport (feedback.js): the panel with competencies, options and the Copy and Download buttons.
+   Used in two places: a popover under the Feedback button of the status card (.st-feedback) and a collapsible
+   block in the assessment aside (.ffa-feedback). Colours follow statuskaart.css (--st-… variables). */
+
+.fx-paneel { display: flex; flex-direction: column; gap: 14px; color: var(--st-inkt, #111827); font-size: 13px; }
+.fx-paneel p { margin: 0; }
+.fx-klein { font-size: 12px; color: var(--st-zacht, #6b7280); }
+.fx-let-op { color: var(--st-tekort, #b45309); }
+
+/* Competencies: one row per competency with a checkbox and the number of learning goals */
+.fx-competenties { display: flex; flex-direction: column; margin: 0; padding: 0; border: 0; min-width: 0; }
+.fx-competenties legend { float: left; padding: 0; margin-bottom: 4px; font-weight: 600; }
+.fx-link { float: right; padding: 0; border: 0; background: none; color: var(--st-open, #0284c7); font-size: 12px; cursor: pointer; }
+.fx-link:hover { text-decoration: underline; }
+.fx-rij { clear: both; display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--st-spoor, #f3f4f6); cursor: pointer; }
+.fx-rij:last-child { border-bottom: 0; }
+.fx-naam { flex-grow: 1; }
+.fx-nu { padding: 1px 6px; border-radius: 9999px; background: var(--st-open-licht, #f0f9ff); color: #0369a1; font-size: 11px; }
+.fx-aantal { font: 12px var(--st-mono, ui-monospace, monospace); color: var(--st-zacht, #6b7280); white-space: nowrap; }
+.fx-paneel input[type="checkbox"] { accent-color: var(--st-open, #0284c7); }
+
+.fx-opties { display: flex; flex-direction: column; gap: 8px; }
+.fx-optie { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+.fx-optie input { margin-top: 2px; }
+
+/* Footer: summary, buttons, status */
+.fx-voet { display: flex; flex-direction: column; gap: 8px; padding-top: 12px; border-top: 1px solid var(--st-lijn, #e5e7eb); }
+.fx-knoppen { display: flex; gap: 8px; }
+.fx-knop {
+  flex: 1 1 0; height: 34px; border: 1px solid var(--st-lijn, #e5e7eb); border-radius: 6px;
+  background: #fff; color: var(--st-inkt, #111827); font-size: 13px; cursor: pointer;
+}
+.fx-knop:hover { border-color: var(--st-zacht, #6b7280); }
+.fx-knop.fx-hoofd { border-color: var(--st-inkt, #111827); background: var(--st-inkt, #111827); color: #fff; font-weight: 600; }
+.fx-knop:disabled { opacity: .45; cursor: not-allowed; }
+.fx-knop:focus-visible, .fx-link:focus-visible { outline: 2px solid var(--st-open, #0284c7); outline-offset: 2px; }
+.fx-status:empty { display: none; }
+.fx-status { color: var(--st-klaar, #047857); }
+
+/* Popover on the student page, under the Feedback button of the status card */
+.st-kaart { position: relative; }
+.st-kaart .st-feedbackknop.actief { background: var(--st-open); border-color: var(--st-open); color: #fff; }
+.st-kaart .st-feedback {
+  position: absolute; top: 48px; right: 16px; z-index: 10; width: 340px; max-width: calc(100% - 32px); box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 10px; padding: 14px;
+  background: #fff; border: 1px solid var(--st-lijn); border-radius: 8px; box-shadow: 0 10px 30px rgba(17, 24, 39, .14);
+}
+.st-kaart .st-feedback .fx-titel { margin: 0; font-size: 13px; font-weight: 600; }
+
+/* Block in the assessment aside; the Feedback button of the card itself is hidden there */
+#ffa-aside .st-kaart .st-feedbackknop { display: none; }
+#ffa-aside .ffa-feedback { padding: 14px; background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; }
+#ffa-aside .ffa-feedback[open] { border-color: #0284c7; box-shadow: inset 0 0 0 1px #0284c7; }
+#ffa-aside .ffa-feedback > summary {
+  display: flex; align-items: center; gap: 6px; cursor: pointer; list-style: none;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6b7280;
+}
+#ffa-aside .ffa-feedback > summary::-webkit-details-marker { display: none; }
+#ffa-aside .ffa-feedback > summary::before { content: '▸'; font-size: 11px; transition: transform 120ms; }
+#ffa-aside .ffa-feedback[open] > summary::before { transform: rotate(90deg); }
+#ffa-aside .ffa-feedback[open] > summary { margin-bottom: 12px; }

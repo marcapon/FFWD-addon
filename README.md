@@ -32,6 +32,13 @@ Een browserextensie (Manifest V3) voor Chrome en Firefox die functies toevoegt a
   - EC per behaald niveau (N1–N3).
 
   Je kunt filteren per groep en sorteren op elke kolom. Klik je op een naam, dan opent de studentpagina in ffwd.
+- **Eerdere feedback exporteren**: de schriftelijke feedback van een student uit eerdere assessments als Markdown, om in de beoordeling verder te gebruiken, ook samen met AI.
+  - Op de studentpagina met de knop **Feedback** in de statuskaart; op een assessmentpagina in het paneel van **EC**, onder de kaart (inklapbaar).
+  - Per competentie (in de volgorde van ffwd), per niveau (N3 → N1) en per assessment van nieuw naar oud. Bij elk leerdoel: het resultaat, de docent, wat de student zich voornam en de feedback. Bovenaan de EC-stand.
+  - Je kiest de competenties. Op een assessmentpagina staan de competenties van dat assessment vooraf aangevinkt (gemarkeerd met "nu").
+  - Opties, onthouden: het leerdoel van de student erbij (standaard aan), de algemene feedback bij een assessment (standaard uit) en **Pseudoniem** (namen, studentnummer en docentnamen eruit).
+  - **Kopiëren** zet de tekst op het klembord; **Downloaden .md** bewaart een bestand. Er wordt niets opgeslagen of verstuurd.
+  - Alleen afgeronde assessments, en alleen de eigen leerdoelen van de student: bij een groepsassessment geeft ffwd ook de leerdoelen van medestudenten, die blijven eruit. Algemene feedback bij een groepsassessment kan wel over het hele team gaan.
 
 ## Installeren
 Werkt in Chrome en andere Chromium-browsers (Edge, Brave, Arc), en in Firefox en Zen.
@@ -63,7 +70,7 @@ Een tijdelijke extensie is weg na een herstart van de browser.
 - **Git:** `git pull`, dan ↻ bij de extensie en ffwd herladen.
 - **Firefox of Zen:** installeer de nieuwe `.xpi` op dezelfde manier; hij vervangt de oude versie.
 
-Je instellingen (cum laude per student, blokken of rijen, filters) blijven bewaard, zolang je de extensie niet verwijdert.
+Je instellingen (cum laude per student, blokken of rijen, filters, opties van de feedbackexport) blijven bewaard, zolang je de extensie niet verwijdert.
 
 ## Rekenregels van de statuskaart
 - Alleen resultaten van afgeronde assessments tellen.
@@ -83,7 +90,7 @@ Je instellingen (cum laude per student, blokken of rijen, filters) blijven bewaa
 - De regels staan in `CUM_LAUDE` in `status.js`.
 
 ## Testen
-- **Rekenregels:** `node --test` in deze map. De tests staan in `tests/` en gebruiken verzonnen studenten uit `sandbox/fixtures.js`.
+- **Rekenregels en feedbackexport:** `node --test` in deze map. De tests staan in `tests/` en gebruiken verzonnen studenten uit `sandbox/fixtures.js`.
 - **Sandbox:** open `sandbox/index.html` in Chrome. Het zijn nagemaakte ffwd-pagina's (studentpagina, lijst met assessments, assessmentpagina) met een nep-API en verzonnen data, die dezelfde bestanden laden als de extensie. Met de balk linksonder kies je de pagina, laat je het laden traag gaan of geeft de API een fout. `?aside=open` zet het paneel op een assessment vooraf open, `?cumlaude=aan` de cum-laudeschakelaar. Je hebt geen inlog nodig en er komt geen echte data aan te pas.
 - **Echte ffwd:** pas als het in de sandbox klopt, laad je de extensie zoals bij Installeren.
 
@@ -91,7 +98,8 @@ Je instellingen (cum laude per student, blokken of rijen, filters) blijven bewaa
 - Een content script draait op `https://app.ffwd.school/*`.
 - Het leest de GraphQL-API op `https://api.ffwd.school/api`, met de inlog van de gebruiker (`credentials: 'include'`).
 - **Alleen lezen.** De extensie schrijft niets naar ffwd en verstuurt niets naar andere diensten.
-- Lokaal, alleen in je eigen browser (`chrome.storage.local`), onthoudt ze je instellingen: cum laude per student, open of dicht, blokken of rijen, open studiejaren en filters. Geen studentgegevens.
+- De feedbackexport maakt het document in je browser. Wat je ermee doet (bijvoorbeeld plakken in een AI-dienst) valt buiten de extensie; houd je daarbij aan de afspraken van de opleiding over studentgegevens.
+- Lokaal, alleen in je eigen browser (`chrome.storage.local`), onthoudt ze je instellingen: cum laude per student, open of dicht, blokken of rijen, open studiejaren, filters en de opties van de feedbackexport. Geen studentgegevens.
 - De API is niet officieel en kan zonder aankondiging veranderen.
 
 ## Bestanden
@@ -109,8 +117,10 @@ Je instellingen (cum laude per student, blokken of rijen, filters) blijven bewaa
 | `extensie/assessmentlijst.css` | stijl van de rijen |
 | `extensie/ec-overzicht.js` | menu-item, paneel en berekening van het EC-overzicht |
 | `extensie/ec-overzicht.css` | eigen stijl van het paneel; werkt zonder andere extensies |
+| `extensie/feedback.js` | feedbackexport: HTML naar Markdown en het document (puur, te testen), en het paneel met keuzes en knoppen |
+| `extensie/feedback.css` | stijl van het exportpaneel, als venster op de studentpagina en als blok in de aside |
 | `sandbox/` | nagemaakte studentpagina, lijst met assessments en assessmentpagina, met nep-API en verzonnen testdata |
-| `tests/` | Node-tests van de rekenregels |
+| `tests/` | Node-tests van de rekenregels, de assessmentlijst en de feedbackexport |
 
 ## Regels
 - Studentgegevens blijven lokaal. Ze komen niet in deze repository: ook niet als voorbeelddata, export of testbestand. De sandbox en de tests gebruiken alleen verzonnen studenten.

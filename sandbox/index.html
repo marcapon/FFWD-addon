@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="../extensie/statuskaart.css">
 <link rel="stylesheet" href="../extensie/assessment-aside.css">
 <link rel="stylesheet" href="../extensie/assessmentlijst.css">
+<link rel="stylesheet" href="../extensie/feedback.css">
 <style>
   /* Wat ffwd zelf in zijn eigen CSS heeft (geen Tailwind): menu-items en de labels bovenaan */
   a.light { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; color: #374151; }
@@ -77,7 +78,9 @@
     if (/\bstudentResults\b/.test(query)) data.studentResults = { goals: student?.doelen || [] };
     // Met studentId: de assessments van die student; zonder: de lijst van de ingelogde docent (komend en afgerond)
     if (variables?.id) {
-      if (/\bpastSessions\b/.test(query)) data.pastSessions = (student?.sessies || []).map((title, i) => ({ title, startingAt: `2026-0${i + 1}-15T10:00:00Z` }));
+      // Met goals: de feedbackexport (verzonnen feedback uit fixtures.js); anders alleen titels, voor het EC-overzicht
+      if (/\bpastSessions\b/.test(query)) data.pastSessions = /\bgoals\b/.test(query) ? F.feedbackVan(variables.id)
+        : (student?.sessies || []).map((title, i) => ({ title, startingAt: `2026-0${i + 1}-15T10:00:00Z` }));
     } else {
       if (/\bupcomingSessions\b/.test(query)) data.upcomingSessions = F.assessments.filter(komend).map(sessieVoorApi);
       if (/\bpastSessions\b/.test(query)) data.pastSessions = F.assessments.filter(a => !komend(a)).map(sessieVoorApi);
@@ -85,6 +88,8 @@
     if (/\bsession\s*\(/.test(query)) {
       const a = F.assessments.find(x => x.id === variables?.id);
       data.session = a && { id: a.id, title: a.title, students: a.studenten.map(studentVan).map(({ id, name, studentId }) => ({ id, name, studentId })) };
+      // De leerdoelen van dit assessment (voor 'Alleen van dit assessment' in de feedbackexport)
+      if (data.session) data.session.goals = F.feedbackSessies.find(x => x.id === a.id)?.goals || [];
     }
     return { json: async () => ({ data }) };
   };
@@ -241,6 +246,7 @@
 <script src="../extensie/gedeeld.js"></script>
 <script src="../extensie/status.js"></script>
 <script src="../extensie/ec-overzicht.js"></script>
+<script src="../extensie/feedback.js"></script>
 <script src="../extensie/statuskaart.js"></script>
 <script src="../extensie/assessment-aside.js"></script>
 <script src="../extensie/assessmentlijst.js"></script>

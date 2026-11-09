@@ -88,7 +88,48 @@ const FfwdFixtures = (() => {
       studenten: ['s-daan'], docenten: ['d-tom', 'd-jij'], pending: [] },
   ];
 
-  return { competenties, programmas, studenten, docenten, assessments, r, propedeuseVol, hoofdfaseVol, stageVol, afstuderenVol };
+  // Verzonnen feedback voor de feedbackexport, zoals pastSessions(studentId) hem teruggeeft:
+  // posts aan een leerdoel (goalId) en algemene posts bij het assessment. Bij een groepsassessment staan
+  // ook de leerdoelen van medestudenten erin, zoals in ffwd; de export moet die weglaten.
+  const doc = id => { const d = docenten.find(x => x.id === id); return { id: d.id, name: d.name, initials: d.initials }; };
+  const leerling = id => { const s = studenten.find(x => x.id === id); return { id: s.id, name: s.name, studentId: s.studentId }; };
+  let volg = 0;
+  const post = (docentId, body, goalId = null, insertedAt = '2026-04-16T12:00:00Z') => ({ id: 'p' + ++volg, goalId, body, insertedAt, author: doc(docentId) });
+  const doel = (studentId, competentie, niveau, amount, description, posts) => {
+    const id = 'g' + ++volg;
+    return { id, level: String(niveau), description, competency: { id: competentie }, student: leerling(studentId),
+      result: amount == null ? null : { amount, level: String(niveau) }, posts: posts.map(p => ({ ...p, goalId: id })) };
+  };
+  const sessie = (a, doelen, algemeen = []) => ({
+    id: a.id, title: a.title, kind: a.kind, context: a.context, startingAt: a.startingAt, finalized: a.finalized,
+    students: a.studenten.map(leerling), goals: doelen, posts: [...doelen.flatMap(g => g.posts), ...algemeen],
+  });
+  const A = id => assessments.find(a => a.id === id);
+  const feedbackSessies = [
+    sessie(A('a-jaar1'), [
+      doel('s-daan', cre, 1, 6, 'Ik maak drie schetsontwerpen voor de poster en kies er één met feedback van klasgenoten.', [
+        post('d-tom', '<p>Daan, je schetsen zijn <strong>gevarieerd</strong> en je keuze is goed onderbouwd.</p><p>Let op:</p><ul><li>noteer wie je feedback gaf;</li><li>bewaar ook de afgevallen schetsen.</li></ul>', null, '2025-07-01T10:00:00Z')]),
+      doel('s-daan', ond, 1, 6, 'Ik onderzoek met vijf interviews wat de doelgroep van een poster verwacht.', [
+        post('d-jij', '<h4>Onderzoek</h4><p>Goede interviews. De conclusies mogen&nbsp;scherper: wat betekent dit voor je ontwerp?</p>', null, '2025-07-01T11:00:00Z')]),
+    ]),
+    sessie(A('a-blok4'), [
+      doel('s-daan', cre, 2, 6, 'Ik ontwerp een interactief prototype en test het met gebruikers.', [
+        post('d-eva', '<p>Sterk prototype. De tweede testronde laat goed zien wat je hebt geleerd.</p><ol><li>Iteraties zijn duidelijk.</li><li>De afweging tussen alternatieven mag explicieter.</li></ol>')]),
+      doel('s-daan', com, 1, 0, 'Ik presenteer ons concept aan de opdrachtgever.', []),
+      doel('s-sanne', cre, 1, 6, 'Ik maak een moodboard voor de huisstijl.', [
+        post('d-tom', '<p>Sanne, mooi moodboard. Dit hoort NIET in de export van Daan.</p>')]),
+    ], [post('d-tom', '<p>Als team hebben jullie goed samengewerkt. Sanne en Daan namen het voortouw bij de presentatie.</p>')]),
+    sessie(A('a-integraal'), [
+      doel('s-daan', ler, 2, null, 'Nog niet afgerond: dit hoort niet in de export.', [post('d-jij', '<p>Concept, nog niet afgerond.</p>')]),
+    ]),
+    sessie(A('a-minor'), [
+      doel('s-noor', cre, 3, 6, 'Ik ontwikkel een speelbare demo met een eigen spelmechaniek.', [
+        post('d-jij', '<p>Een overtuigende demo. Noor laat zien dat ze zelfstandig keuzes maakt en verantwoordt.</p><blockquote><p>De spelers bleven spelen.</p></blockquote>', null, '2026-01-29T10:00:00Z')]),
+    ]),
+  ];
+  const feedbackVan = studentId => feedbackSessies.filter(s => s.students.some(x => x.id === studentId));
+
+  return { competenties, programmas, studenten, docenten, assessments, r, propedeuseVol, hoofdfaseVol, stageVol, afstuderenVol, feedbackSessies, feedbackVan };
 })();
 
 if (typeof module === 'object') module.exports = FfwdFixtures;
